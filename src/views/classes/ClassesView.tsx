@@ -540,71 +540,78 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
                 />
               </div>
 
-              {/* Speed filter pills */}
-              <div className="flex items-center gap-1.5 flex-wrap">
+              {/* Speed filter segmented tray */}
+              <div className="flex items-center bg-muted/40 p-1 rounded-xl border border-border/80 gap-1 flex-wrap">
                 <button
                   onClick={() => setQuickFilter('all')}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
                     quickFilter === 'all'
-                      ? 'bg-foreground text-background shadow-xs'
-                      : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                      ? 'bg-background text-foreground shadow-xs font-semibold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   }`}
                 >
-                  All ({workItems.length})
+                  All
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-muted text-muted-foreground font-mono">{workItems.length}</span>
                 </button>
                 <button
                   onClick={() => setQuickFilter('my_queue')}
-                  className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
                     quickFilter === 'my_queue'
-                      ? 'bg-primary text-primary-foreground shadow-xs'
-                      : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                      ? 'bg-background text-foreground shadow-xs font-semibold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   }`}
                 >
-                  <span>🎯 My Queue</span>
-                  <span className="px-1 py-0.2 rounded-full text-[10px] bg-primary/20">{myQueueCount}</span>
+                  My Queue
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-muted text-muted-foreground font-mono">{myQueueCount}</span>
                 </button>
                 <button
                   onClick={() => setQuickFilter('blockers')}
-                  className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
                     quickFilter === 'blockers'
-                      ? 'bg-red-500 text-white shadow-xs'
-                      : 'bg-card border border-red-500/30 text-red-500 hover:bg-red-500/10'
+                      ? 'bg-background text-foreground shadow-xs font-semibold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   }`}
                 >
-                  <span>🚨 Blockers</span>
-                  <span className="px-1 py-0.2 rounded-full text-[10px] bg-red-500/20">{blockersCount}</span>
+                  <span className="flex items-center gap-1">
+                    {blockersCount > 0 && <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />}
+                    Blockers
+                  </span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${blockersCount > 0 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 font-semibold' : 'bg-muted text-muted-foreground'}`}>
+                    {blockersCount}
+                  </span>
                 </button>
                 <button
                   onClick={() => setQuickFilter('parallel')}
-                  className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
                     quickFilter === 'parallel'
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'bg-card border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10'
+                      ? 'bg-background text-foreground shadow-xs font-semibold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   }`}
                 >
-                  <span>⚡ Parallel</span>
-                  <span className="px-1 py-0.2 rounded-full text-[10px] bg-emerald-500/20">{parallelCount}</span>
+                  Parallel
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-muted text-muted-foreground font-mono">{parallelCount}</span>
                 </button>
                 <button
                   onClick={() => setQuickFilter('review')}
-                  className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
                     quickFilter === 'review'
-                      ? 'bg-purple-600 text-white shadow-xs'
-                      : 'bg-card border border-purple-500/30 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10'
+                      ? 'bg-background text-foreground shadow-xs font-semibold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   }`}
                 >
-                  <span>⏳ In Review</span>
-                  <span className="px-1 py-0.2 rounded-full text-[10px] bg-purple-500/20">{pendingReviewCount}</span>
+                  In Review
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-muted text-muted-foreground font-mono">{pendingReviewCount}</span>
                 </button>
                 <button
                   onClick={() => setQuickFilter('approved')}
-                  className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
                     quickFilter === 'approved'
-                      ? 'bg-emerald-700 text-white shadow-xs'
-                      : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                      ? 'bg-background text-foreground shadow-xs font-semibold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   }`}
                 >
-                  <span>✓ Approved ({approvedCount})</span>
+                  Approved
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-muted text-muted-foreground font-mono">{approvedCount}</span>
                 </button>
               </div>
 
@@ -1268,14 +1275,14 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
             ) : (
               <>
                 {/* Chapter Selector Tabs & Expand/Collapse All */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card/60 p-2.5 rounded-2xl border border-border/80">
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-muted/40 p-1.5 rounded-2xl border border-border/80">
+                  <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
                     <button
                       onClick={() => setSelectedChapterTab('all')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer whitespace-nowrap ${
                         selectedChapterTab === 'all'
-                          ? 'bg-primary text-primary-foreground shadow-xs'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                          ? 'bg-background text-foreground shadow-xs font-semibold'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                       }`}
                     >
                       All Chapters ({chapters.length})
@@ -1288,16 +1295,14 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
                         <button
                           key={chapter.id}
                           onClick={() => setSelectedChapterTab(chapter.id)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                          className={`px-3 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
                             selectedChapterTab === chapter.id
-                              ? 'bg-primary text-primary-foreground shadow-xs'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                              ? 'bg-background text-foreground shadow-xs font-semibold'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                           }`}
                         >
                           <span>Ch. {chapter.chapter_number}</span>
-                          <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                            selectedChapterTab === chapter.id ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'
-                          }`}>
+                          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-muted text-muted-foreground font-mono">
                             {pct}%
                           </span>
                         </button>
@@ -1308,7 +1313,7 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
                   <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                     <button
                       onClick={toggleAllChapters}
-                      className="px-2.5 py-1.5 rounded-xl border border-border hover:bg-muted text-xs font-semibold text-muted-foreground hover:text-foreground transition cursor-pointer flex items-center gap-1.5"
+                      className="px-2.5 py-1.5 rounded-xl border border-border hover:bg-muted text-xs font-medium text-muted-foreground hover:text-foreground transition cursor-pointer flex items-center gap-1.5"
                     >
                       <span>{collapsedChapters.length === chapters.length ? 'Expand All' : 'Collapse All'}</span>
                     </button>
@@ -1344,21 +1349,35 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
                     const audioCleared = [audL1, audL2].filter(i => i && (i.status === 'approved' || i.status === 'delivered')).length;
                     const quizCleared = [quizGen, quizRev, quizImp, quizTest].filter(i => i && (i.status === 'approved' || i.status === 'delivered')).length;
 
+                    // Helper to clean repetitive chapter prefixes and track suffixes from titles
+                    const cleanItemTitle = (rawTitle: string): string => {
+                      if (!rawTitle) return '';
+                      let title = rawTitle;
+                      // Strip chapter/subject prefixes like "Optics: ", "Kinematics: "
+                      title = title.replace(/^[^:]+:\s*/, '');
+                      // Strip trailing track suffixes like "(L1)", "(Video L2)", "(Audio L1)", "(HB Review)", "(Quiz Generation)"
+                      title = title.replace(/\s*\((?:Video\s*|Audio\s*)?L[1-4]\)$/i, '');
+                      title = title.replace(/\s*\(Audio\s*L[1-2]\)$/i, '');
+                      title = title.replace(/\s*\(HB\s*Review\)$/i, '');
+                      title = title.replace(/\s*\(Quiz\s*[A-Za-z0-9\s]+\)$/i, '');
+                      return title.trim() || rawTitle;
+                    };
+
                     // Render track card helper with clear semantic status & stepper identity
                     const renderTrackNode = (stepCode: string, stageTitle: string, item?: WorkItem) => {
                       if (!item) {
                         return (
-                          <div className="p-4 rounded-2xl border border-dashed border-border/80 bg-muted/15 flex flex-col justify-between min-h-[135px]">
+                          <div className="p-3.5 rounded-xl border border-dashed border-border/70 bg-muted/10 flex flex-col justify-between min-h-[125px]">
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground border border-border/50">
                                   {stepCode}
                                 </span>
-                                <span className="text-xs font-semibold text-muted-foreground">{stageTitle}</span>
+                                <span className="text-xs font-medium text-muted-foreground/80">{stageTitle}</span>
                               </div>
-                              <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-muted/80 text-muted-foreground">Unscheduled</span>
+                              <span className="text-[10px] font-medium text-muted-foreground/60">Unscheduled</span>
                             </div>
-                            <p className="text-[11px] text-muted-foreground/60 italic mt-3">Awaiting pipeline queue instantiation</p>
+                            <p className="text-[11px] text-muted-foreground/50 italic mt-2">Awaiting queue</p>
                           </div>
                         );
                       }
@@ -1368,98 +1387,92 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
                       const hasBlocker = (item.remarks || []).some(r => r.status === 'open' && (r.severity === 'blocker' || r.severity === 'correction'));
                       const hasConfidentialRemark = isPrivilegedRole && (item.remarks || []).some(r => r.is_confidential && r.status === 'open');
 
-                      // Unified Semantic Status Styling (Clean & high-contrast)
-                      let statusBadge: React.ReactNode;
-                      let cardBorder = 'border-border/80 hover:border-foreground/30';
-                      let cardBg = 'bg-card';
+                      // Semantic status indicators: Calm, DAW/Linear-inspired, not candy bubble soup
+                      let statusIndicator: React.ReactNode;
+                      let accentBorder = 'border-l-muted-foreground/30';
 
                       if (isApproved) {
-                        cardBorder = 'border-emerald-500/40 hover:border-emerald-500';
-                        cardBg = 'bg-card hover:bg-emerald-500/[0.02]';
-                        statusBadge = (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                            <Check className="h-3 w-3" /> Approved
+                        accentBorder = 'border-l-emerald-500';
+                        statusIndicator = (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                            <Check className="h-3 w-3" /> Done
                           </span>
                         );
                       } else if (hasBlocker || openRemarks > 0) {
-                        cardBorder = hasBlocker ? 'border-rose-500/50 hover:border-rose-500' : 'border-amber-500/50 hover:border-amber-500';
-                        cardBg = hasBlocker ? 'bg-rose-500/[0.02] hover:bg-rose-500/[0.04]' : 'bg-card';
-                        statusBadge = (
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            hasBlocker
-                              ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
-                              : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30'
+                        accentBorder = hasBlocker ? 'border-l-rose-500' : 'border-l-amber-500';
+                        statusIndicator = (
+                          <span className={`inline-flex items-center gap-1 text-[11px] font-semibold ${
+                            hasBlocker ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400'
                           }`}>
                             <span className={`h-1.5 w-1.5 rounded-full ${hasBlocker ? 'bg-rose-500 animate-ping' : 'bg-amber-500'}`} />
                             {openRemarks} {hasBlocker ? 'Blocker' : 'Remark'}{openRemarks > 1 ? 's' : ''}
                           </span>
                         );
                       } else if (item.status === 'review_in_progress') {
-                        cardBorder = 'border-primary/40 hover:border-primary';
-                        cardBg = 'bg-card hover:bg-primary/[0.02]';
-                        statusBadge = (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
+                        accentBorder = 'border-l-primary';
+                        statusIndicator = (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-primary">
                             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                            Tier: {item.current_review_stage || 'In Review'}
+                            {item.current_review_stage || 'In Review'}
                           </span>
                         );
                       } else {
-                        // Draft in progress
-                        cardBorder = 'border-border/80 hover:border-foreground/30';
-                        cardBg = 'bg-card';
-                        statusBadge = (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground border border-border">
-                            In Production
+                        accentBorder = 'border-l-muted-foreground/30';
+                        statusIndicator = (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+                            In Progress
                           </span>
                         );
                       }
 
+                      const cleanedTitle = cleanItemTitle(item.title);
+
                       return (
                         <div
                           onClick={() => setActiveReviewItem(item)}
-                          className={`p-4 rounded-2xl border ${cardBorder} ${cardBg} transition-all cursor-pointer shadow-xs hover:shadow-md flex flex-col justify-between min-h-[140px] group relative select-none`}
+                          className={`p-3.5 rounded-xl border border-border/80 border-l-[3px] ${accentBorder} bg-card hover:bg-muted/20 hover:border-border transition-all cursor-pointer shadow-2xs hover:shadow-xs flex flex-col justify-between min-h-[125px] group relative select-none`}
                         >
                           <div>
-                            {/* Step Indicator and Status Pill */}
+                            {/* Step Indicator and Status Text */}
                             <div className="flex items-center justify-between gap-2 mb-2">
                               <div className="flex items-center gap-1.5 min-w-0">
-                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-muted border border-border text-foreground shrink-0">
+                                <span className="text-[10px] font-mono font-bold text-foreground/80 px-1.5 py-0.5 rounded bg-muted/60 border border-border/50 shrink-0">
                                   {stepCode}
                                 </span>
-                                <span className="text-[11px] font-semibold text-muted-foreground truncate">
+                                <span className="text-[11px] font-medium text-muted-foreground truncate">
                                   {stageTitle}
                                 </span>
                               </div>
 
                               <div className="shrink-0">
-                                {statusBadge}
+                                {statusIndicator}
                               </div>
                             </div>
 
-                            {/* Deliverable Title */}
-                            <h5 className="text-xs font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
-                              {item.title}
+                            {/* Clean De-duplicated Title */}
+                            <h5 className="text-xs font-semibold text-foreground/90 group-hover:text-primary transition-colors line-clamp-2 leading-relaxed">
+                              {cleanedTitle}
                             </h5>
                           </div>
 
                           {/* Footer Info: Assignee, Version, Client Direct flag */}
-                          <div className="pt-2.5 mt-2 border-t border-border/50 flex items-center justify-between text-[11px]">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <div className="h-5 w-5 rounded-full bg-primary/15 text-primary flex items-center justify-center font-bold text-[9px] shrink-0">
+                          <div className="pt-2 mt-2 border-t border-border/40 flex items-center justify-between text-[11px]">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <div className="h-4 w-4 rounded-full bg-muted text-foreground/70 flex items-center justify-center font-bold text-[8px] shrink-0 border border-border/50">
                                 {getProfileName(item.assignee_ids[0]).slice(0, 2).toUpperCase()}
                               </div>
-                              <span className="truncate text-muted-foreground text-[11px]">
+                              <span className="truncate text-muted-foreground text-[10px]">
                                 {getProfileName(item.assignee_ids[0]).split(' ')[0]}
                               </span>
                             </div>
 
                             <div className="flex items-center gap-1.5 shrink-0">
                               {hasConfidentialRemark && (
-                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 border border-amber-500/30" title="Confidential Client note exists">
+                                <span className="text-[9px] font-semibold px-1 py-0.2 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20" title="Confidential Client note exists">
                                   🔒 Direct
                                 </span>
                               )}
-                              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
+                              <span className="text-[9px] font-mono text-muted-foreground/80 px-1 py-0.2 rounded bg-muted/50">
                                 v{item.latest_version_number || 1}
                               </span>
                             </div>
@@ -1482,15 +1495,15 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
 
                             <div className="min-w-0">
                               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <span className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-primary text-primary-foreground">
+                                <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-muted border border-border text-foreground">
                                   Chapter {String(chapter.chapter_number).padStart(2, '0')}
                                 </span>
-                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
-                                  chapter.status === 'completed' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
-                                  chapter.status === 'in_progress' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' :
-                                  'bg-muted text-muted-foreground border-border'
+                                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                                  chapter.status === 'completed' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
+                                  chapter.status === 'in_progress' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' :
+                                  'bg-muted text-muted-foreground'
                                 }`}>
-                                  {chapter.status.toUpperCase()}
+                                  {chapter.status === 'completed' ? 'Completed' : chapter.status === 'in_progress' ? 'In Production' : 'Planned'}
                                 </span>
                                 {chapter.target_date && (
                                   <span className="text-xs text-muted-foreground font-medium">
@@ -1508,7 +1521,7 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
                           {/* Progress Gauge and Collapsed Quick Summary */}
                           <div className="flex items-center gap-4 shrink-0 self-end md:self-auto">
                             {isCollapsed && (
-                              <div className="hidden lg:flex items-center gap-2 text-[11px] font-bold text-muted-foreground">
+                              <div className="hidden lg:flex items-center gap-2 text-[11px] font-medium text-muted-foreground">
                                 <span className="px-2 py-0.5 rounded bg-muted">Video {videoCleared}/4</span>
                                 <span className="px-2 py-0.5 rounded bg-muted">Audio {audioCleared}/2</span>
                                 <span className="px-2 py-0.5 rounded bg-muted">Quiz {quizCleared}/4</span>
@@ -1516,11 +1529,11 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
                             )}
 
                             <div className="flex flex-col md:items-end gap-1.5 shrink-0">
-                              <div className="flex items-center gap-2 text-xs font-bold">
-                                <span className="text-primary font-mono">{approvedCount}/{chapterItems.length} Cleared</span>
+                              <div className="flex items-center gap-2 text-xs font-semibold">
+                                <span className="text-foreground font-mono">{approvedCount}/{chapterItems.length} Cleared</span>
                                 <span className="px-2 py-0.5 rounded bg-primary/10 text-primary font-mono">{progressPct}%</span>
                               </div>
-                              <div className="w-36 md:w-44 h-2 bg-muted rounded-full overflow-hidden border border-border">
+                              <div className="w-36 md:w-44 h-1.5 bg-muted rounded-full overflow-hidden border border-border">
                                 <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${progressPct}%` }} />
                               </div>
                             </div>
@@ -1529,31 +1542,37 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
 
                         {/* Chapter Tracks Matrix (Expandable) */}
                         {!isCollapsed && (
-                          <div className="p-4 md:p-6 space-y-6">
+                          <div className="p-4 md:p-6 space-y-5">
                             
                             {/* Pod 1: Script & Editorial Foundation */}
-                            <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xs">
-                              <div className="p-4 bg-muted/30 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                <div className="flex items-center gap-3">
-                                  <span className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
-                                    <FileText className="h-4 w-4" />
-                                  </span>
+                            <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-2xs">
+                              <div className="p-3.5 bg-muted/20 border-b border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="h-7 w-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center shrink-0">
+                                    <FileText className="h-3.5 w-3.5" />
+                                  </div>
                                   <div>
-                                    <h4 className="text-sm font-bold text-foreground">
+                                    <h4 className="text-xs font-bold text-foreground">
                                       Pod 1 · Editorial & Narrative Direction
                                     </h4>
-                                    <p className="text-[11px] text-muted-foreground">
+                                    <p className="text-[10px] text-muted-foreground">
                                       Foundational pedagogical script & final executive handbook clearance (HB Review)
                                     </p>
                                   </div>
                                 </div>
-                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-muted border border-border text-foreground self-start sm:self-auto shrink-0">
-                                  {[scriptItem, hbItem].filter(i => i && (i.status === 'approved' || i.status === 'delivered')).length}/2 Cleared
-                                </span>
+                                <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                                  <div className="flex items-center gap-1" title="Pod clearance pipeline">
+                                    <span className={`h-1.5 w-5 rounded-full transition-colors ${scriptItem?.status === 'approved' || scriptItem?.status === 'delivered' ? 'bg-emerald-500' : 'bg-muted border border-border/60'}`} />
+                                    <span className={`h-1.5 w-5 rounded-full transition-colors ${hbItem?.status === 'approved' || hbItem?.status === 'delivered' ? 'bg-emerald-500' : 'bg-muted border border-border/60'}`} />
+                                  </div>
+                                  <span className="text-[10px] font-mono text-muted-foreground font-semibold">
+                                    {[scriptItem, hbItem].filter(i => i && (i.status === 'approved' || i.status === 'delivered')).length}/2
+                                  </span>
+                                </div>
                               </div>
 
-                              <div className="p-4 md:p-5">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="p-3.5 md:p-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                   {renderTrackNode('Script', 'Script Draft & Storyboard', scriptItem)}
                                   {renderTrackNode('HB', 'HB Final Director Clearance', hbItem)}
                                 </div>
@@ -1561,50 +1580,36 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
                             </div>
 
                             {/* Pod 2: Video Production Pipeline (L1 -> L4) */}
-                            <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xs">
-                              <div className="p-4 bg-muted/30 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                <div className="flex items-center gap-3">
-                                  <span className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">
-                                    <Video className="h-4 w-4" />
-                                  </span>
+                            <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-2xs">
+                              <div className="p-3.5 bg-muted/20 border-b border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="h-7 w-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center shrink-0">
+                                    <Video className="h-3.5 w-3.5" />
+                                  </div>
                                   <div>
-                                    <h4 className="text-sm font-bold text-foreground">
+                                    <h4 className="text-xs font-bold text-foreground">
                                       Pod 2 · Video Multi-Level Production Pipeline
                                     </h4>
-                                    <p className="text-[11px] text-muted-foreground">
+                                    <p className="text-[10px] text-muted-foreground">
                                       L1 Tech QC ➔ L2 3D Motion & VFX ➔ L3 Visual Polish ➔ L4 4K Master Grading
                                     </p>
                                   </div>
                                 </div>
-                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 self-start sm:self-auto shrink-0">
-                                  {videoCleared}/4 Cleared
-                                </span>
+                                <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                                  <div className="flex items-center gap-1" title="L1 → L2 → L3 → L4 clearance">
+                                    <span className={`h-1.5 w-5 rounded-full transition-colors ${vidL1?.status === 'approved' || vidL1?.status === 'delivered' ? 'bg-emerald-500' : 'bg-muted border border-border/60'}`} />
+                                    <span className={`h-1.5 w-5 rounded-full transition-colors ${vidL2?.status === 'approved' || vidL2?.status === 'delivered' ? 'bg-emerald-500' : 'bg-muted border border-border/60'}`} />
+                                    <span className={`h-1.5 w-5 rounded-full transition-colors ${vidL3?.status === 'approved' || vidL3?.status === 'delivered' ? 'bg-emerald-500' : 'bg-muted border border-border/60'}`} />
+                                    <span className={`h-1.5 w-5 rounded-full transition-colors ${vidL4?.status === 'approved' || vidL4?.status === 'delivered' ? 'bg-emerald-500' : 'bg-muted border border-border/60'}`} />
+                                  </div>
+                                  <span className="text-[10px] font-mono text-muted-foreground font-semibold">
+                                    {videoCleared}/4
+                                  </span>
+                                </div>
                               </div>
 
-                              <div className="p-4 md:p-5 space-y-4">
-                                {/* Horizontal Pipeline Stepper */}
-                                <div className="hidden sm:flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-muted/30 border border-border/60 text-xs font-semibold text-muted-foreground">
-                                  <span className="text-[10px] font-bold uppercase tracking-wider text-foreground shrink-0">Workflow Stage:</span>
-                                  <div className="flex items-center gap-2 flex-1 max-w-xl justify-between">
-                                    <span className={`flex items-center gap-1 ${vidL1?.status === 'approved' ? 'text-emerald-600 font-bold' : vidL1 ? 'text-primary font-bold' : ''}`}>
-                                      {vidL1?.status === 'approved' ? '✓' : '1.'} Tech QC
-                                    </span>
-                                    <ArrowRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-                                    <span className={`flex items-center gap-1 ${vidL2?.status === 'approved' ? 'text-emerald-600 font-bold' : vidL2 ? 'text-primary font-bold' : ''}`}>
-                                      {vidL2?.status === 'approved' ? '✓' : '2.'} 3D Motion
-                                    </span>
-                                    <ArrowRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-                                    <span className={`flex items-center gap-1 ${vidL3?.status === 'approved' ? 'text-emerald-600 font-bold' : vidL3 ? 'text-primary font-bold' : ''}`}>
-                                      {vidL3?.status === 'approved' ? '✓' : '3.'} Visual Polish
-                                    </span>
-                                    <ArrowRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-                                    <span className={`flex items-center gap-1 ${vidL4?.status === 'approved' ? 'text-emerald-600 font-bold' : vidL4 ? 'text-primary font-bold' : ''}`}>
-                                      {vidL4?.status === 'approved' ? '✓' : '4.'} 4K Master
-                                    </span>
-                                  </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                              <div className="p-3.5 md:p-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                                   {renderTrackNode('L1', 'Tech QC Rough Cut', vidL1)}
                                   {renderTrackNode('L2', '3D Motion & VFX', vidL2)}
                                   {renderTrackNode('L3', 'Visual Polish & Sync', vidL3)}
@@ -1614,42 +1619,34 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
                             </div>
 
                             {/* Pod 3: Audio & Sound Pipeline (L1 -> L2) */}
-                            <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xs">
-                              <div className="p-4 bg-muted/30 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                <div className="flex items-center gap-3">
-                                  <span className="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shrink-0">
-                                    <Mic className="h-4 w-4" />
-                                  </span>
+                            <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-2xs">
+                              <div className="p-3.5 bg-muted/20 border-b border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="h-7 w-7 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center justify-center shrink-0">
+                                    <Mic className="h-3.5 w-3.5" />
+                                  </div>
                                   <div>
-                                    <h4 className="text-sm font-bold text-foreground">
+                                    <h4 className="text-xs font-bold text-foreground">
                                       Pod 3 · Audio & Voiceover Pipeline
                                     </h4>
-                                    <p className="text-[11px] text-muted-foreground">
+                                    <p className="text-[10px] text-muted-foreground">
                                       L1 Voiceover Recording & EQ ➔ L2 SFX & Ambience Spatial Mix
                                     </p>
                                   </div>
                                 </div>
-                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 self-start sm:self-auto shrink-0">
-                                  {audioCleared}/2 Cleared
-                                </span>
+                                <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                                  <div className="flex items-center gap-1" title="L1 → L2 clearance">
+                                    <span className={`h-1.5 w-5 rounded-full transition-colors ${audL1?.status === 'approved' || audL1?.status === 'delivered' ? 'bg-emerald-500' : 'bg-muted border border-border/60'}`} />
+                                    <span className={`h-1.5 w-5 rounded-full transition-colors ${audL2?.status === 'approved' || audL2?.status === 'delivered' ? 'bg-emerald-500' : 'bg-muted border border-border/60'}`} />
+                                  </div>
+                                  <span className="text-[10px] font-mono text-muted-foreground font-semibold">
+                                    {audioCleared}/2
+                                  </span>
+                                </div>
                               </div>
 
-                              <div className="p-4 md:p-5 space-y-4">
-                                {/* Audio Stepper */}
-                                <div className="hidden sm:flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-muted/30 border border-border/60 text-xs font-semibold text-muted-foreground">
-                                  <span className="text-[10px] font-bold uppercase tracking-wider text-foreground shrink-0">Audio Mix Flow:</span>
-                                  <div className="flex items-center gap-3 flex-1 max-w-sm justify-between">
-                                    <span className={`flex items-center gap-1 ${audL1?.status === 'approved' ? 'text-emerald-600 font-bold' : audL1 ? 'text-primary font-bold' : ''}`}>
-                                      {audL1?.status === 'approved' ? '✓' : '1.'} Voiceover EQ
-                                    </span>
-                                    <ArrowRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-                                    <span className={`flex items-center gap-1 ${audL2?.status === 'approved' ? 'text-emerald-600 font-bold' : audL2 ? 'text-primary font-bold' : ''}`}>
-                                      {audL2?.status === 'approved' ? '✓' : '2.'} SFX & Ambience Mix
-                                    </span>
-                                  </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                              <div className="p-3.5 md:p-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                   {renderTrackNode('L1', 'Voiceover & Dialogue EQ', audL1)}
                                   {renderTrackNode('L2', 'Sound Design & Ambience', audL2)}
                                 </div>
@@ -1657,50 +1654,36 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
                             </div>
 
                             {/* Pod 4: Interactive Quiz & Pedagogical QA */}
-                            <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xs">
-                              <div className="p-4 bg-muted/30 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                <div className="flex items-center gap-3">
-                                  <span className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-                                    <CheckSquare className="h-4 w-4" />
-                                  </span>
+                            <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-2xs">
+                              <div className="p-3.5 bg-muted/20 border-b border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="h-7 w-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                                    <CheckSquare className="h-3.5 w-3.5" />
+                                  </div>
                                   <div>
-                                    <h4 className="text-sm font-bold text-foreground">
+                                    <h4 className="text-xs font-bold text-foreground">
                                       Pod 4 · Interactive Quiz & Pedagogical Assessment
                                     </h4>
-                                    <p className="text-[11px] text-muted-foreground">
+                                    <p className="text-[10px] text-muted-foreground">
                                       Question Generation ➔ Subject SME Review ➔ Interactive Engine Code ➔ QA Validation
                                     </p>
                                   </div>
                                 </div>
-                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 self-start sm:self-auto shrink-0">
-                                  {quizCleared}/4 Cleared
-                                </span>
+                                <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                                  <div className="flex items-center gap-1" title="Gen → Rev → Impl → QA clearance">
+                                    <span className={`h-1.5 w-5 rounded-full transition-colors ${quizGen?.status === 'approved' || quizGen?.status === 'delivered' ? 'bg-emerald-500' : 'bg-muted border border-border/60'}`} />
+                                    <span className={`h-1.5 w-5 rounded-full transition-colors ${quizRev?.status === 'approved' || quizRev?.status === 'delivered' ? 'bg-emerald-500' : 'bg-muted border border-border/60'}`} />
+                                    <span className={`h-1.5 w-5 rounded-full transition-colors ${quizImp?.status === 'approved' || quizImp?.status === 'delivered' ? 'bg-emerald-500' : 'bg-muted border border-border/60'}`} />
+                                    <span className={`h-1.5 w-5 rounded-full transition-colors ${quizTest?.status === 'approved' || quizTest?.status === 'delivered' ? 'bg-emerald-500' : 'bg-muted border border-border/60'}`} />
+                                  </div>
+                                  <span className="text-[10px] font-mono text-muted-foreground font-semibold">
+                                    {quizCleared}/4
+                                  </span>
+                                </div>
                               </div>
 
-                              <div className="p-4 md:p-5 space-y-4">
-                                {/* Quiz Stepper */}
-                                <div className="hidden sm:flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-muted/30 border border-border/60 text-xs font-semibold text-muted-foreground">
-                                  <span className="text-[10px] font-bold uppercase tracking-wider text-foreground shrink-0">Pedagogy Flow:</span>
-                                  <div className="flex items-center gap-2 flex-1 max-w-xl justify-between">
-                                    <span className={`flex items-center gap-1 ${quizGen?.status === 'approved' ? 'text-emerald-600 font-bold' : quizGen ? 'text-primary font-bold' : ''}`}>
-                                      {quizGen?.status === 'approved' ? '✓' : '1.'} Generation
-                                    </span>
-                                    <ArrowRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-                                    <span className={`flex items-center gap-1 ${quizRev?.status === 'approved' ? 'text-emerald-600 font-bold' : quizRev ? 'text-primary font-bold' : ''}`}>
-                                      {quizRev?.status === 'approved' ? '✓' : '2.'} SME Review
-                                    </span>
-                                    <ArrowRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-                                    <span className={`flex items-center gap-1 ${quizImp?.status === 'approved' ? 'text-emerald-600 font-bold' : quizImp ? 'text-primary font-bold' : ''}`}>
-                                      {quizImp?.status === 'approved' ? '✓' : '3.'} Implementation
-                                    </span>
-                                    <ArrowRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-                                    <span className={`flex items-center gap-1 ${quizTest?.status === 'approved' ? 'text-emerald-600 font-bold' : quizTest ? 'text-primary font-bold' : ''}`}>
-                                      {quizTest?.status === 'approved' ? '✓' : '4.'} Testing QA
-                                    </span>
-                                  </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                              <div className="p-3.5 md:p-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                                   {renderTrackNode('Gen', 'Question Design (SME)', quizGen)}
                                   {renderTrackNode('Rev', 'Pedagogical Review', quizRev)}
                                   {renderTrackNode('Impl', 'Interactive Engine Dev', quizImp)}
