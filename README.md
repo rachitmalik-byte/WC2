@@ -220,6 +220,31 @@ npm run dev
 
 ## 📝 Patch Notes & Changelog
 
+### Version 2.2.0 — *Team Threads Overhaul & Focus Mode Cockpit*
+*Release Date: September 2026*
+
+#### 🌟 New Features & Architectural Upgrades
+- **Focus Mode Cockpit (🎯 My Focus vs 📁 Studio Overview)**:
+  - **One-Click Mode Switch**: Individual team members can switch from overwhelming macro project tables to an ultra-clean personal action cockpit.
+  - **3-Lane Triage Grid**:
+    - **1. My Active Deliverables**: Shows strictly items assigned to the active persona with open remarks, version tags, and instant Review Drawer triggers.
+    - **2. Awaiting My Review Sign-Off**: Highlights items where the user is assigned as a review gatekeeper (L1–L4, HB, QA).
+    - **3. Critical Blockers**: Displays flagged high-priority remarks across the project for swift unblocking.
+- **De-Cluttered Chapter Production Matrix**:
+  - **Chapter Selector Tabs**: Jump directly between chapters (`Ch. 01 (100%)`, `Ch. 02 (42%)`) or view all.
+  - **Accordion Collapse / Expand**: Fold away finished or non-active chapters; collapsed state features quick-glance status chips (`Video 3/4`, `Audio 2/2`, `Quiz 3/4`).
+  - **4 Department Pods**: The 12-track chapter matrix is cleanly partitioned into:
+    - *Pod 1: Script & Pedagogy Baseline* (Draft & HB Clearance bookends)
+    - *Pod 2: Video Production Pipeline* (L1 Tech QC → L2 3D Motion → L3 Fine Polish → L4 4K Master)
+    - *Pod 3: Audio & Sound Pipeline* (L1 Voiceover EQ → L2 SFX & Ambience)
+    - *Pod 4: Interactive Quiz Assessment* (Generation → Review → Implementation → QA Testing)
+  - **Consolidated Search & Filter Drawer**: Compact unified search bar with speed-filter pills (`🎯 My Queue`, `🚨 Blockers`, `⚡ Parallel`, `⏳ In Review`, `✓ Approved`) and an expandable Advanced Filters drawer.
+- **Team Threads Real-Time Production Messaging**:
+  - **Production-Tailored Channels**: Replaced legacy marketing channels with 6 IXR-specific feeds: `#announcements`, `#ch01-optics-production`, `#ch02-circuits-production`, `#video-and-animation`, `#audio-and-sound`, `#quiz-and-pedagogy`.
+  - **Confidential Directive Channel (`🔒 #client-direct-directives`)**: Restricted strictly to Executive Leadership (`CEO`, `Head of IXR`) and the Client Director (`Dr. Alistair Vance`); hidden from specialists.
+  - **Interactive Deliverable Reference Cards**: Mentioning asset identifiers (e.g. `[asset:c1-vid-l2]`) in chat automatically renders interactive asset cards showing current stage, version, and a direct **`[Open Review Drawer]`** button.
+  - **Direct Review Drawer Launch from Chat**: Team members can inspect timestamped video remarks and sign off on assets without leaving their conversation flow.
+
 ### Version 2.1.0 — *Chapter Hierarchy & Confidential Client Direct Hub*
 *Release Date: September 2026*
 

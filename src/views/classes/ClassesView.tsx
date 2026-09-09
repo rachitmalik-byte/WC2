@@ -10,7 +10,7 @@ import {
   Layers, Table, Kanban, Plus, Search, Video, Mic, CheckSquare,
   FileText, ExternalLink, Download, CheckCheck, Sparkles,
   FolderTree, Lock, Send, UserCheck, MessageSquare,
-  Shield, Check
+  Check, ChevronDown, SlidersHorizontal, ArrowRight
 } from 'lucide-react';
 
 interface ClassesViewProps {
@@ -22,6 +22,12 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
 
   const isPrivilegedRole = currentUser?.role === 'client' || currentUser?.role === 'head' || currentUser?.email?.toLowerCase().includes('ashish.garg');
   const isClientUser = currentUser?.role === 'client';
+
+  const [primaryMode, setPrimaryMode] = useState<'focus' | 'studio'>('studio');
+  const [selectedChapterTab, setSelectedChapterTab] = useState<string>('all');
+  const [collapsedChapters, setCollapsedChapters] = useState<string[]>([]);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
+  const [tableDensity, setTableDensity] = useState<'comfortable' | 'compact'>('comfortable');
 
   const [classes, setClasses] = useState<ProjectClass[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<string>('all');
@@ -119,6 +125,25 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
   const myQueueCount = workItems.filter(i => currentUser && (i.assignee_ids?.includes(currentUser.id) || i.reviewer_ids?.includes(currentUser.id))).length;
   const pendingReviewCount = workItems.filter(i => i.status === 'review_in_progress').length;
   const approvedCount = workItems.filter(i => i.status === 'approved' || i.status === 'delivered').length;
+
+  // Focus queue items for active persona
+  const myAssignedDeliverables = workItems.filter(i => currentUser && i.assignee_ids?.includes(currentUser.id));
+  const myPendingReviews = workItems.filter(i => currentUser && i.reviewer_ids?.includes(currentUser.id) && i.status === 'review_in_progress');
+  const criticalBlockerItems = workItems.filter(i => (i.remarks || []).some(r => r.status === 'open' && (r.severity === 'blocker' || r.severity === 'correction')));
+
+  const toggleChapterCollapse = (chapterId: string) => {
+    setCollapsedChapters(prev =>
+      prev.includes(chapterId) ? prev.filter(id => id !== chapterId) : [...prev, chapterId]
+    );
+  };
+
+  const toggleAllChapters = () => {
+    if (collapsedChapters.length === chapters.length) {
+      setCollapsedChapters([]);
+    } else {
+      setCollapsedChapters(chapters.map(c => c.id));
+    }
+  };
 
   // Filter items
   const filteredItems = workItems.filter(item => {
@@ -369,70 +394,109 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
     <div className="flex-1 flex flex-col h-full bg-background overflow-hidden">
       
       {/* Top Action Header */}
-      <div className="p-4 md:p-6 border-b border-border bg-card/50 backdrop-blur shrink-0 space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
+      {/* Top Action Header */}
+      <div className="p-4 md:p-5 border-b border-border bg-card/50 backdrop-blur shrink-0 space-y-3.5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          
+          {/* Left: Branding & Primary Mode Switcher (Focus vs Studio) */}
+          <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2">
               <span className="p-2 rounded-xl bg-primary/10 text-primary">
                 <Layers className="h-5 w-5" />
               </span>
               <div>
-                <h1 className="text-xl font-bold text-foreground tracking-tight">Classes & Production Assets</h1>
-                <p className="text-xs text-muted-foreground">
-                  IXR & EdTech workflow engine: Multi-tier reviews (L1–L4), Frame.io feedback, and dynamic handoffs.
+                <h1 className="text-lg font-bold text-foreground tracking-tight leading-tight">Classes & Production Assets</h1>
+                <p className="text-[11px] text-muted-foreground">
+                  Multi-tier reviews (L1–L4), Frame.io feedback, and dynamic handoffs.
                 </p>
               </div>
             </div>
-          </div>
 
-          {/* Quick Action Buttons */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* View Switcher: Chapters Hierarchy vs Excel Table vs Jira Kanban */}
-            <div className="flex items-center bg-muted/60 p-1 rounded-xl border border-border">
+            {/* Primary Mode Toggle: My Focus vs Studio Overview */}
+            <div className="flex items-center bg-muted/70 p-1 rounded-xl border border-border shrink-0 ml-0 sm:ml-2">
               <button
-                onClick={() => setViewMode('chapters')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
-                  viewMode === 'chapters'
-                    ? 'bg-card text-foreground shadow-sm'
+                onClick={() => setPrimaryMode('focus')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
+                  primaryMode === 'focus'
+                    ? 'bg-card text-primary shadow-xs border border-border'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                <FolderTree className="h-3.5 w-3.5 text-primary" />
-                Chapter Hierarchy
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                <span>🎯 My Focus</span>
+                {myAssignedDeliverables.length > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-primary/15 text-primary font-bold">
+                    {myAssignedDeliverables.length}
+                  </span>
+                )}
               </button>
               <button
-                onClick={() => setViewMode('excel')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
-                  viewMode === 'excel'
-                    ? 'bg-card text-foreground shadow-sm'
+                onClick={() => setPrimaryMode('studio')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
+                  primaryMode === 'studio'
+                    ? 'bg-card text-foreground shadow-xs border border-border'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                <Table className="h-3.5 w-3.5" />
-                Spreadsheet (Excel)
-              </button>
-              <button
-                onClick={() => setViewMode('kanban')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
-                  viewMode === 'kanban'
-                    ? 'bg-card text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Kanban className="h-3.5 w-3.5" />
-                Pipeline (Jira)
+                <Layers className="h-3.5 w-3.5" />
+                <span>📁 Studio Overview</span>
               </button>
             </div>
+          </div>
+
+          {/* Right Action Buttons */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {primaryMode === 'studio' && (
+              <div className="flex items-center bg-muted/60 p-1 rounded-xl border border-border">
+                <button
+                  onClick={() => setViewMode('chapters')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                    viewMode === 'chapters'
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <FolderTree className="h-3.5 w-3.5 text-primary" />
+                  <span className="hidden sm:inline">Chapter Hierarchy</span>
+                  <span className="sm:hidden">Chapters</span>
+                </button>
+                <button
+                  onClick={() => setViewMode('excel')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                    viewMode === 'excel'
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Table className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Spreadsheet</span>
+                  <span className="sm:hidden">Excel</span>
+                </button>
+                <button
+                  onClick={() => setViewMode('kanban')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                    viewMode === 'kanban'
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Kanban className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Pipeline</span>
+                  <span className="sm:hidden">Jira</span>
+                </button>
+              </div>
+            )}
 
             {/* Confidential Client Direct Channel (Restricted to Client, Head of IXR, CEO) */}
             {isPrivilegedRole && (
               <button
                 onClick={() => setShowClientHub(true)}
-                className="px-3.5 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-sm relative"
+                className="px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-sm relative"
                 title="Confidential communication channel between Client Representative, Head of IXR, and CEO."
               >
                 <Lock className="h-3.5 w-3.5 text-amber-600" />
-                <span>Client Direct Hub</span>
+                <span className="hidden sm:inline">Client Direct Hub</span>
+                <span className="sm:hidden">Client Hub</span>
                 {clientComms.filter(c => c.status === 'pending').length > 0 && (
                   <span className="h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center animate-pulse">
                     {clientComms.filter(c => c.status === 'pending').length}
@@ -442,202 +506,451 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
             )}
 
             <button
-              onClick={() => setIsCreatingClass(true)}
-              className="px-3 py-1.5 rounded-xl border border-border bg-card text-foreground hover:bg-muted text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
-            >
-              <Plus className="h-3.5 w-3.5" /> New Class / Project
-            </button>
-
-            <button
               onClick={handleExportCSV}
               title="Export filtered assets to CSV / Excel spreadsheet"
-              className="px-3 py-1.5 rounded-xl border border-border bg-card text-foreground hover:bg-muted text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+              className="px-2.5 py-1.5 rounded-xl border border-border bg-card text-foreground hover:bg-muted text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-xs"
             >
               <Download className="h-3.5 w-3.5 text-primary" />
-              <span>Export CSV</span>
+              <span className="hidden md:inline">Export CSV</span>
             </button>
 
             <button
               onClick={() => setIsCreatingItem(true)}
-              className="px-3.5 py-1.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+              className="px-3 py-1.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-xs"
             >
-              <Plus className="h-4 w-4" /> Add Asset / Task
+              <Plus className="h-4 w-4" />
+              <span>Add Asset</span>
             </button>
           </div>
         </div>
 
-        {/* Filter Toolbar */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5 pt-1 text-xs">
-          
-          {/* Class / Subject Selector */}
-          <div className="relative">
-            <select
-              value={selectedClassId}
-              onChange={(e) => setSelectedClassId(e.target.value)}
-              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-medium focus:outline-none focus:border-primary cursor-pointer text-xs"
-            >
-              <option value="all">📚 All Classes & Batches ({classes.length})</option>
-              {classes.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.code} · {c.name}
-                </option>
-              ))}
-            </select>
+        {/* TOOLBAR FOR STUDIO MODE */}
+        {primaryMode === 'studio' ? (
+          <div className="space-y-2.5 pt-1">
+            <div className="flex items-center gap-2 flex-wrap text-xs">
+              {/* Search bar */}
+              <div className="relative flex-1 min-w-[200px] max-w-md">
+                <Search className="h-3.5 w-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search assets, instructions..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-card border border-border rounded-xl pl-8 pr-3 py-1.5 text-foreground text-xs focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              {/* Speed filter pills */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  onClick={() => setQuickFilter('all')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    quickFilter === 'all'
+                      ? 'bg-foreground text-background shadow-xs'
+                      : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  All ({workItems.length})
+                </button>
+                <button
+                  onClick={() => setQuickFilter('my_queue')}
+                  className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                    quickFilter === 'my_queue'
+                      ? 'bg-primary text-primary-foreground shadow-xs'
+                      : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <span>🎯 My Queue</span>
+                  <span className="px-1 py-0.2 rounded-full text-[10px] bg-primary/20">{myQueueCount}</span>
+                </button>
+                <button
+                  onClick={() => setQuickFilter('blockers')}
+                  className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                    quickFilter === 'blockers'
+                      ? 'bg-red-500 text-white shadow-xs'
+                      : 'bg-card border border-red-500/30 text-red-500 hover:bg-red-500/10'
+                  }`}
+                >
+                  <span>🚨 Blockers</span>
+                  <span className="px-1 py-0.2 rounded-full text-[10px] bg-red-500/20">{blockersCount}</span>
+                </button>
+                <button
+                  onClick={() => setQuickFilter('parallel')}
+                  className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                    quickFilter === 'parallel'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-card border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10'
+                  }`}
+                >
+                  <span>⚡ Parallel</span>
+                  <span className="px-1 py-0.2 rounded-full text-[10px] bg-emerald-500/20">{parallelCount}</span>
+                </button>
+                <button
+                  onClick={() => setQuickFilter('review')}
+                  className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                    quickFilter === 'review'
+                      ? 'bg-purple-600 text-white shadow-xs'
+                      : 'bg-card border border-purple-500/30 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10'
+                  }`}
+                >
+                  <span>⏳ In Review</span>
+                  <span className="px-1 py-0.2 rounded-full text-[10px] bg-purple-500/20">{pendingReviewCount}</span>
+                </button>
+                <button
+                  onClick={() => setQuickFilter('approved')}
+                  className={`px-2 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                    quickFilter === 'approved'
+                      ? 'bg-emerald-700 text-white shadow-xs'
+                      : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <span>✓ Approved ({approvedCount})</span>
+                </button>
+              </div>
+
+              {/* Advanced Filters Toggle Button */}
+              <button
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className={`ml-auto px-2.5 py-1 rounded-lg border text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+                  showAdvancedFilters
+                    ? 'bg-primary/10 border-primary/30 text-primary'
+                    : 'bg-card border-border text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <SlidersHorizontal className="h-3 w-3" />
+                <span>Filters</span>
+                <ChevronDown className={`h-3 w-3 transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Table Density Switch (for Excel mode) */}
+              {viewMode === 'excel' && (
+                <button
+                  onClick={() => setTableDensity(prev => prev === 'comfortable' ? 'compact' : 'comfortable')}
+                  className="px-2.5 py-1 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground text-xs font-medium transition cursor-pointer"
+                  title="Toggle table row height"
+                >
+                  {tableDensity === 'comfortable' ? 'Dense View' : 'Comfort View'}
+                </button>
+              )}
+            </div>
+
+            {/* Collapsible Advanced Filters Drawer */}
+            {showAdvancedFilters && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 p-3 bg-muted/40 border border-border rounded-xl animate-in slide-in-from-top-1 duration-150">
+                <div>
+                  <label className="text-[10px] font-bold text-muted-foreground block mb-1">Class / Subject</label>
+                  <select
+                    value={selectedClassId}
+                    onChange={(e) => setSelectedClassId(e.target.value)}
+                    className="w-full bg-card border border-border rounded-lg px-2.5 py-1.5 text-foreground text-xs focus:outline-none focus:border-primary cursor-pointer"
+                  >
+                    <option value="all">All Classes & Batches ({classes.length})</option>
+                    {classes.map(c => (
+                      <option key={c.id} value={c.id}>{c.code} · {c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-muted-foreground block mb-1">Asset Type</label>
+                  <select
+                    value={assetTypeFilter}
+                    onChange={(e) => setAssetTypeFilter(e.target.value)}
+                    className="w-full bg-card border border-border rounded-lg px-2.5 py-1.5 text-foreground text-xs focus:outline-none focus:border-primary cursor-pointer"
+                  >
+                    <option value="all">All Asset Types</option>
+                    <option value="video">Videos / 3D Animation</option>
+                    <option value="audio">Voiceover / Audio Tracks</option>
+                    <option value="quiz">Interactive Quizzes</option>
+                    <option value="interactive_module">Interactive Labs</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-muted-foreground block mb-1">Review Tier</label>
+                  <select
+                    value={reviewStageFilter}
+                    onChange={(e) => setReviewStageFilter(e.target.value)}
+                    className="w-full bg-card border border-border rounded-lg px-2.5 py-1.5 text-foreground text-xs focus:outline-none focus:border-primary cursor-pointer"
+                  >
+                    <option value="all">All Review Tiers</option>
+                    <option value="L1">L1: Tech Audio/Video</option>
+                    <option value="L2">L2: Handbook Accuracy</option>
+                    <option value="L3">L3: Quiz Logic</option>
+                    <option value="L4">L4: Final Signoff</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-muted-foreground block mb-1">Role Scope</label>
+                  <select
+                    value={roleQueueFilter}
+                    onChange={(e) => setRoleQueueFilter(e.target.value)}
+                    className="w-full bg-card border border-border rounded-lg px-2.5 py-1.5 text-foreground text-xs focus:outline-none focus:border-primary cursor-pointer"
+                  >
+                    <option value="all">Full Team Queue</option>
+                    <option value="my_work">Assigned to Me</option>
+                    <option value="my_reviews">Pending My Review</option>
+                  </select>
+                </div>
+              </div>
+            )}
           </div>
-
-          {/* Search bar */}
-          <div className="relative">
-            <Search className="h-3.5 w-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search assets, instructions..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-card border border-border rounded-xl pl-8 pr-3 py-2 text-foreground text-xs focus:outline-none focus:border-primary"
-            />
-          </div>
-
-          {/* Asset Type Filter */}
-          <div>
-            <select
-              value={assetTypeFilter}
-              onChange={(e) => setAssetTypeFilter(e.target.value)}
-              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-medium focus:outline-none focus:border-primary cursor-pointer text-xs"
-            >
-              <option value="all">🎨 All Asset Types</option>
-              <option value="video">🎬 Videos / 3D Animation</option>
-              <option value="audio">🎙️ Voiceover / Audio Tracks</option>
-              <option value="quiz">📝 Interactive Quizzes</option>
-              <option value="interactive_module">🧪 Interactive Labs</option>
-            </select>
-          </div>
-
-          {/* Review Tier Filter */}
-          <div>
-            <select
-              value={reviewStageFilter}
-              onChange={(e) => setReviewStageFilter(e.target.value)}
-              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-medium focus:outline-none focus:border-primary cursor-pointer text-xs"
-            >
-              <option value="all">🔍 All Review Tiers</option>
-              <option value="L1">L1: Tech Audio/Video</option>
-              <option value="L2">L2: Handbook Accuracy</option>
-              <option value="L3">L3: Quiz Logic</option>
-              <option value="L4">L4: Final Signoff</option>
-            </select>
-          </div>
-
-          {/* My Role / Queue Filter */}
-          <div>
-            <select
-              value={roleQueueFilter}
-              onChange={(e) => setRoleQueueFilter(e.target.value)}
-              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-medium focus:outline-none focus:border-primary cursor-pointer text-xs"
-            >
-              <option value="all">👥 Full Team Queue</option>
-              <option value="my_work">💼 Assigned to Me</option>
-              <option value="my_reviews">🎯 Pending My Review</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Quick Speed-Filter Pills */}
-        <div className="flex items-center gap-2 pt-3 flex-wrap text-xs border-t border-border/50 mt-3">
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mr-1 flex items-center gap-1">
-            <Sparkles className="h-3 w-3 text-primary" />
-            <span>Speed Filter:</span>
-          </span>
-
-          <button
-            onClick={() => setQuickFilter('all')}
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              quickFilter === 'all'
-                ? 'bg-foreground text-background shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            All ({workItems.length})
-          </button>
-
-          <button
-            onClick={() => setQuickFilter('blockers')}
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              quickFilter === 'blockers'
-                ? 'bg-red-500 text-white shadow-sm'
-                : 'bg-card border border-red-500/30 text-red-500 hover:bg-red-500/10'
-            }`}
-          >
-            <span>🚨 Critical Blockers</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-red-500/20">{blockersCount}</span>
-          </button>
-
-          <button
-            onClick={() => setQuickFilter('parallel')}
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              quickFilter === 'parallel'
-                ? 'bg-emerald-600 text-white shadow-sm'
-                : 'bg-card border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10'
-            }`}
-          >
-            <span>⚡ Parallel Queue</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-500/20">{parallelCount}</span>
-          </button>
-
-          <button
-            onClick={() => setQuickFilter('my_queue')}
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              quickFilter === 'my_queue'
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <span>👤 My Assigned</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-primary/15 text-primary">{myQueueCount}</span>
-          </button>
-
-          <button
-            onClick={() => setQuickFilter('review')}
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              quickFilter === 'review'
-                ? 'bg-purple-600 text-white shadow-sm'
-                : 'bg-card border border-purple-500/30 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10'
-            }`}
-          >
-            <span>⏳ In Review</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-purple-500/20">{pendingReviewCount}</span>
-          </button>
-
-          <button
-            onClick={() => setQuickFilter('approved')}
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              quickFilter === 'approved'
-                ? 'bg-emerald-700 text-white shadow-sm'
-                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <span>✓ Approved ({approvedCount})</span>
-          </button>
-
-          <div className="ml-auto hidden xl:flex items-center gap-2 px-3 py-1 rounded-lg bg-primary/10 border border-primary/20 text-[11px] text-primary font-semibold">
-            <span>⚡ ACID Database Protected</span>
-            <span className="text-muted-foreground">•</span>
-            <span>Zero Overwrite Risk</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Viewport: Excel Table or Jira Kanban */}
-      <div className="flex-1 overflow-auto p-4 md:p-6">
-        
-        {/* Batch Action Bar */}
-        {selectedItemIds.length > 0 && (
-          <div className="bg-foreground text-background rounded-xl p-3 mb-4 shadow-xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-150">
-            <div className="flex items-center gap-2">
-              <CheckCheck className="h-4 w-4 text-primary" />
-              <span className="text-xs font-bold">
-                {selectedItemIds.length} asset{selectedItemIds.length > 1 ? 's' : ''} selected
+        ) : (
+          /* FOCUS MODE HEADER BANNER */
+          <div className="flex items-center justify-between gap-3 pt-1 text-xs">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="h-7 w-7 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+                {currentUser?.full_name.slice(0, 2).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <span className="font-bold text-foreground">Focus Deck for {currentUser?.full_name}</span>
+                <span className="text-muted-foreground ml-1.5">({currentUser?.designation})</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                ⚡ Focused Action View
               </span>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Main Viewport: Focus Deck OR Studio Modes (Excel Table / Jira Kanban / Chapter Hierarchy) */}
+      <div className="flex-1 overflow-auto p-4 md:p-6">
+        
+        {primaryMode === 'focus' ? (
+          /* FOCUS MODE COCKPIT */
+          <div className="space-y-6 max-w-7xl mx-auto">
+            
+            {/* Focus Metrics Bar */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-4 rounded-2xl border border-primary/20 bg-primary/[0.04] flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Assigned to Me</p>
+                  <p className="text-2xl font-black text-primary mt-0.5">{myAssignedDeliverables.length}</p>
+                </div>
+                <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+                  ⚡
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl border border-purple-500/20 bg-purple-500/[0.04] flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Awaiting My Review</p>
+                  <p className="text-2xl font-black text-purple-600 dark:text-purple-400 mt-0.5">{myPendingReviews.length}</p>
+                </div>
+                <div className="h-10 w-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold">
+                  🎯
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl border border-red-500/20 bg-red-500/[0.04] flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Active Blockers</p>
+                  <p className="text-2xl font-black text-red-500 mt-0.5">{criticalBlockerItems.length}</p>
+                </div>
+                <div className="h-10 w-10 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center font-bold">
+                  🚨
+                </div>
+              </div>
+            </div>
+
+            {/* Section 1: My Active Deliverables */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                    <CheckSquare className="h-4 w-4" />
+                  </span>
+                  <h3 className="text-sm font-bold text-foreground">
+                    1. My Active Deliverables ({myAssignedDeliverables.length})
+                  </h3>
+                </div>
+                <span className="text-xs text-muted-foreground">Assets assigned to you in production or rework</span>
+              </div>
+
+              {myAssignedDeliverables.length === 0 ? (
+                <div className="p-6 rounded-2xl border border-border bg-card/60 text-center text-xs text-muted-foreground">
+                  <Check className="h-8 w-8 text-emerald-500 mx-auto mb-1.5" />
+                  <p className="font-bold text-foreground">No active deliverables in your queue</p>
+                  <p className="text-[11px] mt-0.5">You have cleared all your assigned production tasks.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                  {myAssignedDeliverables.map(item => {
+                    const firstRemark = (item.remarks || []).find(r => r.status === 'open');
+                    const chap = chapters.find(c => c.id === item.chapter_id);
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="p-4 rounded-2xl border border-border bg-card shadow-xs hover:shadow-md transition-all flex flex-col justify-between group space-y-3"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-1 mb-1.5">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
+                              {chap ? `Ch. ${chap.chapter_number}` : 'Project'} · {item.chapter_track?.replace('_', ' ').toUpperCase() || item.asset_type}
+                            </span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              item.status === 'approved' ? 'bg-emerald-500/15 text-emerald-600' :
+                              item.status === 'review_in_progress' ? 'bg-purple-500/15 text-purple-600' :
+                              'bg-blue-500/15 text-blue-600'
+                            }`}>
+                              v{item.latest_version_number || 1} · {item.current_review_stage || item.status}
+                            </span>
+                          </div>
+
+                          <h4 className="text-xs font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                            {item.title}
+                          </h4>
+                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1">
+                            {item.instruction_text}
+                          </p>
+
+                          {firstRemark && (
+                            <div className="mt-2.5 p-2 rounded-xl bg-red-500/[0.06] border border-red-500/20 text-[11px] text-red-600 dark:text-red-400">
+                              <span className="font-bold">Open Remark: </span>
+                              <span className="truncate block">{firstRemark.remark_text}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="pt-2 border-t border-border/50 flex items-center justify-between gap-2">
+                          <button
+                            onClick={() => setActiveReviewItem(item)}
+                            className="flex-1 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1 shadow-xs"
+                          >
+                            <span>Review Drawer</span>
+                            <ArrowRight className="h-3 w-3" />
+                          </button>
+
+                          {item.status !== 'review_in_progress' && item.status !== 'approved' && (
+                            <button
+                              onClick={() => handleInlineStatusChange(item.id, 'review_in_progress')}
+                              className="px-2.5 py-1.5 rounded-xl border border-border hover:bg-muted text-xs font-semibold text-muted-foreground hover:text-foreground transition cursor-pointer"
+                              title="Mark draft ready for reviewer QC"
+                            >
+                              Ready for QC
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Section 2: Awaiting My Review Sign-off */}
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600">
+                    <Video className="h-4 w-4" />
+                  </span>
+                  <h3 className="text-sm font-bold text-foreground">
+                    2. Awaiting My Review Sign-Off ({myPendingReviews.length})
+                  </h3>
+                </div>
+                <span className="text-xs text-muted-foreground">Deliverables where your review gate is required</span>
+              </div>
+
+              {myPendingReviews.length === 0 ? (
+                <div className="p-6 rounded-2xl border border-border bg-card/60 text-center text-xs text-muted-foreground">
+                  <Check className="h-8 w-8 text-emerald-500 mx-auto mb-1.5" />
+                  <p className="font-bold text-foreground">No deliverables pending your review</p>
+                  <p className="text-[11px] mt-0.5">All items submitted to your queue have been signed off.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                  {myPendingReviews.map(item => (
+                    <div
+                      key={item.id}
+                      className="p-4 rounded-2xl border border-purple-500/30 bg-card shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-3"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-500/15 text-purple-600">
+                            Tier: {item.current_review_stage}
+                          </span>
+                          <span className="text-[10px] font-mono font-bold text-muted-foreground">
+                            v{item.latest_version_number || 1}
+                          </span>
+                        </div>
+                        <h4 className="text-xs font-bold text-foreground line-clamp-1">{item.title}</h4>
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Assigned to: <span className="font-medium text-foreground">{getProfileName(item.assignee_ids[0])}</span>
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => setActiveReviewItem(item)}
+                        className="w-full px-3 py-1.5 rounded-xl bg-purple-600 text-white hover:bg-purple-700 text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1 shadow-xs"
+                      >
+                        <span>Inspect & Sign Off</span>
+                        <ArrowRight className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Section 3: Critical Blockers */}
+            {criticalBlockerItems.length > 0 && (
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-red-500/10 text-red-500">
+                    <Lock className="h-4 w-4" />
+                  </span>
+                  <h3 className="text-sm font-bold text-foreground">
+                    3. Project Critical Blockers ({criticalBlockerItems.length})
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {criticalBlockerItems.map(item => {
+                    const blocker = (item.remarks || []).find(r => r.status === 'open' && (r.severity === 'blocker' || r.severity === 'correction'));
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => setActiveReviewItem(item)}
+                        className="p-3.5 rounded-2xl border border-red-500/30 bg-red-500/[0.03] hover:border-red-500 transition cursor-pointer flex items-center justify-between gap-3 shadow-xs"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-red-500 text-white">
+                              BLOCKER
+                            </span>
+                            <h4 className="text-xs font-bold text-foreground truncate">{item.title}</h4>
+                          </div>
+                          <p className="text-[11px] text-red-600 dark:text-red-400 truncate">
+                            {blocker ? `[${blocker.review_stage}] ${blocker.remark_text}` : 'Pending revision required'}
+                          </p>
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-red-500 shrink-0" />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+          </div>
+        ) : (
+          /* STUDIO OVERVIEW (Batch Bar, Excel, Kanban, Chapter Hierarchy) */
+          <>
+            {/* Batch Action Bar */}
+            {selectedItemIds.length > 0 && (
+              <div className="bg-foreground text-background rounded-xl p-3 mb-4 shadow-xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="flex items-center gap-2">
+                  <CheckCheck className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-bold">
+                    {selectedItemIds.length} asset{selectedItemIds.length > 1 ? 's' : ''} selected
+                  </span>
+                </div>
 
             <div className="flex items-center gap-2 flex-wrap">
               <button
@@ -953,217 +1266,314 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
                 <p className="text-xs mt-1">Select an active class project from the top filter or initialize chapter tracks.</p>
               </div>
             ) : (
-              chapters.map(chapter => {
-                const chapterItems = workItems.filter(i => i.chapter_id === chapter.id);
-                const approvedCount = chapterItems.filter(i => i.status === 'approved' || i.status === 'delivered').length;
-                const totalTracks = 12; // 1 Script + 4 Video + 2 Audio + 4 Quiz + 1 HB
-                const progressPct = chapterItems.length > 0 ? Math.round((approvedCount / Math.max(chapterItems.length, totalTracks)) * 100) : 0;
-
-                // Track extractors
-                const scriptItem = chapterItems.find(i => i.chapter_track === 'script');
-                const vidL1 = chapterItems.find(i => i.chapter_track === 'video_l1');
-                const vidL2 = chapterItems.find(i => i.chapter_track === 'video_l2');
-                const vidL3 = chapterItems.find(i => i.chapter_track === 'video_l3');
-                const vidL4 = chapterItems.find(i => i.chapter_track === 'video_l4');
-                const audL1 = chapterItems.find(i => i.chapter_track === 'audio_l1');
-                const audL2 = chapterItems.find(i => i.chapter_track === 'audio_l2');
-                const quizGen = chapterItems.find(i => i.chapter_track === 'quiz_generation');
-                const quizRev = chapterItems.find(i => i.chapter_track === 'quiz_review');
-                const quizImp = chapterItems.find(i => i.chapter_track === 'quiz_implementation');
-                const quizTest = chapterItems.find(i => i.chapter_track === 'quiz_testing');
-                const hbItem = chapterItems.find(i => i.chapter_track === 'hb_review');
-
-                // Render track card helper
-                const renderTrackNode = (label: string, item?: WorkItem, badgeColor = 'bg-primary/10 text-primary border-primary/20') => {
-                  if (!item) {
-                    return (
-                      <div className="p-3 rounded-xl border border-dashed border-border/80 bg-muted/20 flex flex-col justify-between min-h-[110px]">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-muted-foreground">{label}</span>
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Unscheduled</span>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground/70 italic mt-2">Awaiting queue instantiation</p>
-                      </div>
-                    );
-                  }
-
-                  const openRemarks = (item.remarks || []).filter(r => r.status === 'open').length;
-                  const hasBlocker = (item.remarks || []).some(r => r.status === 'open' && (r.severity === 'blocker' || r.severity === 'correction'));
-                  const hasConfidentialRemark = isPrivilegedRole && (item.remarks || []).some(r => r.is_confidential && r.status === 'open');
-
-                  return (
-                    <div
-                      onClick={() => setActiveReviewItem(item)}
-                      className={`p-3 rounded-xl border transition-all cursor-pointer shadow-xs hover:shadow-md flex flex-col justify-between min-h-[115px] group ${
-                        item.status === 'approved'
-                          ? 'bg-emerald-500/[0.04] border-emerald-500/30 hover:border-emerald-500'
-                          : item.status === 'review_in_progress'
-                          ? 'bg-purple-500/[0.04] border-purple-500/30 hover:border-purple-500'
-                          : 'bg-card border-border hover:border-primary'
+              <>
+                {/* Chapter Selector Tabs & Expand/Collapse All */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card/60 p-2.5 rounded-2xl border border-border/80">
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                    <button
+                      onClick={() => setSelectedChapterTab('all')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap ${
+                        selectedChapterTab === 'all'
+                          ? 'bg-primary text-primary-foreground shadow-xs'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                       }`}
                     >
-                      <div>
-                        <div className="flex items-center justify-between gap-1 mb-1">
-                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${badgeColor}`}>
-                            {label}
-                          </span>
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                            item.status === 'approved' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
-                            item.status === 'review_in_progress' ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400' :
-                            'bg-blue-500/15 text-blue-600 dark:text-blue-400'
+                      All Chapters ({chapters.length})
+                    </button>
+                    {chapters.map(chapter => {
+                      const chapterItems = workItems.filter(i => i.chapter_id === chapter.id);
+                      const cleared = chapterItems.filter(i => i.status === 'approved' || i.status === 'delivered').length;
+                      const pct = chapterItems.length > 0 ? Math.round((cleared / Math.max(chapterItems.length, 12)) * 100) : 0;
+                      return (
+                        <button
+                          key={chapter.id}
+                          onClick={() => setSelectedChapterTab(chapter.id)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                            selectedChapterTab === chapter.id
+                              ? 'bg-primary text-primary-foreground shadow-xs'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                          }`}
+                        >
+                          <span>Ch. {chapter.chapter_number}</span>
+                          <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                            selectedChapterTab === chapter.id ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'
                           }`}>
-                            {item.status === 'approved' ? '✓ Approved' : item.current_review_stage || item.status}
+                            {pct}%
                           </span>
-                        </div>
-                        <h5 className="text-[11px] font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                          {item.title}
-                        </h5>
-                      </div>
-
-                      <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[10px] mt-2">
-                        <div className="flex items-center gap-1 min-w-0">
-                          <span className="h-4.5 w-4.5 rounded-full bg-primary/20 text-primary font-bold text-[8px] flex items-center justify-center shrink-0">
-                            {getProfileName(item.assignee_ids[0]).slice(0, 2).toUpperCase()}
-                          </span>
-                          <span className="truncate text-muted-foreground text-[10px]">
-                            {getProfileName(item.assignee_ids[0]).split(' ')[0]}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-1 shrink-0">
-                          {hasConfidentialRemark && (
-                            <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-600 font-bold border border-amber-500/30" title="Confidential Client note exists on this asset">
-                              🔒
-                            </span>
-                          )}
-                          {openRemarks > 0 ? (
-                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                              hasBlocker ? 'bg-red-500/20 text-red-500' : 'bg-amber-500/20 text-amber-600'
-                            }`}>
-                              {openRemarks} open
-                            </span>
-                          ) : (
-                            <span className="text-emerald-500 font-bold text-[9px]">v{item.latest_version_number}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                };
-
-                return (
-                  <div key={chapter.id} className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
-                    {/* Chapter Header Banner */}
-                    <div className="p-4 md:p-5 bg-muted/30 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-primary text-primary-foreground">
-                            Chapter {String(chapter.chapter_number).padStart(2, '0')}
-                          </span>
-                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
-                            chapter.status === 'completed' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
-                            chapter.status === 'in_progress' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' :
-                            'bg-muted text-muted-foreground border-border'
-                          }`}>
-                            {chapter.status.toUpperCase()}
-                          </span>
-                          {chapter.target_date && (
-                            <span className="text-xs text-muted-foreground font-medium">
-                              Target Delivery: {new Date(chapter.target_date).toLocaleDateString()}
-                            </span>
-                          )}
-                        </div>
-                        <h3 className="text-base font-bold text-foreground">{chapter.title}</h3>
-                        <p className="text-xs text-muted-foreground max-w-3xl mt-0.5">{chapter.description}</p>
-                      </div>
-
-                      {/* Progress Gauge */}
-                      <div className="flex flex-col md:items-end gap-1.5 shrink-0">
-                        <div className="flex items-center gap-2 text-xs font-bold">
-                          <span className="text-muted-foreground">Course Milestone Progress:</span>
-                          <span className="text-primary">{approvedCount}/{chapterItems.length} Tracks Cleared</span>
-                          <span className="px-2 py-0.5 rounded bg-primary/10 text-primary">{progressPct}%</span>
-                        </div>
-                        <div className="w-44 h-2 bg-muted rounded-full overflow-hidden border border-border">
-                          <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${progressPct}%` }} />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Chapter Tracks Matrix */}
-                    <div className="p-4 md:p-6 space-y-6">
-                      
-                      {/* Top Row: Script & HB Review Bookends */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/15 p-3 rounded-xl border border-border/60">
-                        <div>
-                          <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <FileText className="h-3.5 w-3.5 text-amber-500" />
-                            <span>1. Script & Pedagogical Baseline</span>
-                          </div>
-                          {renderTrackNode('Script Draft', scriptItem, 'bg-amber-500/10 text-amber-600 border-amber-500/30')}
-                        </div>
-
-                        <div>
-                          <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <Shield className="h-3.5 w-3.5 text-indigo-500" />
-                            <span>5. HB Review (Final Director Clearance)</span>
-                          </div>
-                          {renderTrackNode('HB Final Clearance', hbItem, 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30')}
-                        </div>
-                      </div>
-
-                      {/* Video Production Track: L1 -> L2 -> L3 -> L4 */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="text-[11px] font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                            <Video className="h-3.5 w-3.5 text-blue-500" />
-                            <span>2. Video Multi-Level Track (L1 → L2 → L3 → L4)</span>
-                          </div>
-                          <span className="text-[10px] text-muted-foreground font-medium">Sequential or parallel review staging</span>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                          {renderTrackNode('Video: L1 (Tech QC)', vidL1, 'bg-blue-500/10 text-blue-500 border-blue-500/20')}
-                          {renderTrackNode('Video: L2 (3D Motion)', vidL2, 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20')}
-                          {renderTrackNode('Video: L3 (Fine Polish)', vidL3, 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20')}
-                          {renderTrackNode('Video: L4 (4K Master)', vidL4, 'bg-purple-500/10 text-purple-500 border-purple-500/20')}
-                        </div>
-                      </div>
-
-                      {/* Audio & Sound Track: L1 -> L2 */}
-                      <div className="space-y-2">
-                        <div className="text-[11px] font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                          <Mic className="h-3.5 w-3.5 text-purple-500" />
-                          <span>3. Audio & Voiceover Track (L1 → L2)</span>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {renderTrackNode('Audio: L1 (Voiceover EQ)', audL1, 'bg-purple-500/10 text-purple-500 border-purple-500/20')}
-                          {renderTrackNode('Audio: L2 (SFX & Ambience)', audL2, 'bg-fuchsia-500/10 text-fuchsia-500 border-fuchsia-500/20')}
-                        </div>
-                      </div>
-
-                      {/* Interactive Quiz Track: Generation -> Review -> Implementation -> Testing */}
-                      <div className="space-y-2">
-                        <div className="text-[11px] font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                          <CheckSquare className="h-3.5 w-3.5 text-emerald-500" />
-                          <span>4. Interactive Quiz Track (Generation → Review → Implementation → Testing)</span>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                          {renderTrackNode('Quiz: Generation', quizGen, 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20')}
-                          {renderTrackNode('Quiz: Review', quizRev, 'bg-teal-500/10 text-teal-600 border-teal-500/20')}
-                          {renderTrackNode('Quiz: Implementation', quizImp, 'bg-amber-500/10 text-amber-600 border-amber-500/20')}
-                          {renderTrackNode('Quiz: Testing QA', quizTest, 'bg-rose-500/10 text-rose-600 border-rose-500/20')}
-                        </div>
-                      </div>
-
-                    </div>
+                        </button>
+                      );
+                    })}
                   </div>
-                );
-              })
+
+                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                    <button
+                      onClick={toggleAllChapters}
+                      className="px-2.5 py-1.5 rounded-xl border border-border hover:bg-muted text-xs font-semibold text-muted-foreground hover:text-foreground transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <span>{collapsedChapters.length === chapters.length ? 'Expand All' : 'Collapse All'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Filtered Chapter Cards */}
+                {chapters
+                  .filter(c => selectedChapterTab === 'all' || c.id === selectedChapterTab)
+                  .map(chapter => {
+                    const chapterItems = workItems.filter(i => i.chapter_id === chapter.id);
+                    const approvedCount = chapterItems.filter(i => i.status === 'approved' || i.status === 'delivered').length;
+                    const totalTracks = 12; // 1 Script + 4 Video + 2 Audio + 4 Quiz + 1 HB
+                    const progressPct = chapterItems.length > 0 ? Math.round((approvedCount / Math.max(chapterItems.length, totalTracks)) * 100) : 0;
+                    const isCollapsed = collapsedChapters.includes(chapter.id);
+
+                    // Track extractors
+                    const scriptItem = chapterItems.find(i => i.chapter_track === 'script');
+                    const vidL1 = chapterItems.find(i => i.chapter_track === 'video_l1');
+                    const vidL2 = chapterItems.find(i => i.chapter_track === 'video_l2');
+                    const vidL3 = chapterItems.find(i => i.chapter_track === 'video_l3');
+                    const vidL4 = chapterItems.find(i => i.chapter_track === 'video_l4');
+                    const audL1 = chapterItems.find(i => i.chapter_track === 'audio_l1');
+                    const audL2 = chapterItems.find(i => i.chapter_track === 'audio_l2');
+                    const quizGen = chapterItems.find(i => i.chapter_track === 'quiz_generation');
+                    const quizRev = chapterItems.find(i => i.chapter_track === 'quiz_review');
+                    const quizImp = chapterItems.find(i => i.chapter_track === 'quiz_implementation');
+                    const quizTest = chapterItems.find(i => i.chapter_track === 'quiz_testing');
+                    const hbItem = chapterItems.find(i => i.chapter_track === 'hb_review');
+
+                    // Department Cleared Counts
+                    const videoCleared = [vidL1, vidL2, vidL3, vidL4].filter(i => i && (i.status === 'approved' || i.status === 'delivered')).length;
+                    const audioCleared = [audL1, audL2].filter(i => i && (i.status === 'approved' || i.status === 'delivered')).length;
+                    const quizCleared = [quizGen, quizRev, quizImp, quizTest].filter(i => i && (i.status === 'approved' || i.status === 'delivered')).length;
+
+                    // Render track card helper
+                    const renderTrackNode = (label: string, item?: WorkItem, badgeColor = 'bg-primary/10 text-primary border-primary/20') => {
+                      if (!item) {
+                        return (
+                          <div className="p-3 rounded-xl border border-dashed border-border/80 bg-muted/20 flex flex-col justify-between min-h-[110px]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-bold text-muted-foreground">{label}</span>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Unscheduled</span>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground/70 italic mt-2">Awaiting queue instantiation</p>
+                          </div>
+                        );
+                      }
+
+                      const openRemarks = (item.remarks || []).filter(r => r.status === 'open').length;
+                      const hasBlocker = (item.remarks || []).some(r => r.status === 'open' && (r.severity === 'blocker' || r.severity === 'correction'));
+                      const hasConfidentialRemark = isPrivilegedRole && (item.remarks || []).some(r => r.is_confidential && r.status === 'open');
+
+                      return (
+                        <div
+                          onClick={() => setActiveReviewItem(item)}
+                          className={`p-3 rounded-xl border transition-all cursor-pointer shadow-xs hover:shadow-md flex flex-col justify-between min-h-[115px] group ${
+                            item.status === 'approved'
+                              ? 'bg-emerald-500/[0.04] border-emerald-500/30 hover:border-emerald-500'
+                              : item.status === 'review_in_progress'
+                              ? 'bg-purple-500/[0.04] border-purple-500/30 hover:border-purple-500'
+                              : 'bg-card border-border hover:border-primary'
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-1 mb-1">
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${badgeColor}`}>
+                                {label}
+                              </span>
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                                item.status === 'approved' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
+                                item.status === 'review_in_progress' ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400' :
+                                'bg-blue-500/15 text-blue-600 dark:text-blue-400'
+                              }`}>
+                                {item.status === 'approved' ? '✓ Approved' : item.current_review_stage || item.status}
+                              </span>
+                            </div>
+                            <h5 className="text-[11px] font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                              {item.title}
+                            </h5>
+                          </div>
+
+                          <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[10px] mt-2">
+                            <div className="flex items-center gap-1 min-w-0">
+                              <span className="h-4.5 w-4.5 rounded-full bg-primary/20 text-primary font-bold text-[8px] flex items-center justify-center shrink-0">
+                                {getProfileName(item.assignee_ids[0]).slice(0, 2).toUpperCase()}
+                              </span>
+                              <span className="truncate text-muted-foreground text-[10px]">
+                                {getProfileName(item.assignee_ids[0]).split(' ')[0]}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0">
+                              {hasConfidentialRemark && (
+                                <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-600 font-bold border border-amber-500/30" title="Confidential Client note exists on this asset">
+                                  🔒
+                                </span>
+                              )}
+                              {openRemarks > 0 ? (
+                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                  hasBlocker ? 'bg-red-500/20 text-red-500' : 'bg-amber-500/20 text-amber-600'
+                                }`}>
+                                  {openRemarks} open
+                                </span>
+                              ) : (
+                                <span className="text-emerald-500 font-bold text-[9px]">v{item.latest_version_number}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    };
+
+                    return (
+                      <div key={chapter.id} className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
+                        {/* Chapter Header Banner (Clickable Accordion) */}
+                        <div
+                          onClick={() => toggleChapterCollapse(chapter.id)}
+                          className="p-4 md:p-5 bg-muted/30 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-3 cursor-pointer hover:bg-muted/50 transition select-none"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className={`p-1.5 rounded-lg bg-card border border-border text-muted-foreground transition-transform duration-200 shrink-0 ${isCollapsed ? '-rotate-90' : 'rotate-0'}`}>
+                              <ChevronDown className="h-4 w-4" />
+                            </div>
+
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <span className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-primary text-primary-foreground">
+                                  Chapter {String(chapter.chapter_number).padStart(2, '0')}
+                                </span>
+                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
+                                  chapter.status === 'completed' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
+                                  chapter.status === 'in_progress' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' :
+                                  'bg-muted text-muted-foreground border-border'
+                                }`}>
+                                  {chapter.status.toUpperCase()}
+                                </span>
+                                {chapter.target_date && (
+                                  <span className="text-xs text-muted-foreground font-medium">
+                                    Target Delivery: {new Date(chapter.target_date).toLocaleDateString()}
+                                  </span>
+                                )}
+                              </div>
+                              <h3 className="text-base font-bold text-foreground truncate">{chapter.title}</h3>
+                              {!isCollapsed && (
+                                <p className="text-xs text-muted-foreground max-w-3xl mt-0.5 line-clamp-1">{chapter.description}</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Progress Gauge and Collapsed Quick Summary */}
+                          <div className="flex items-center gap-4 shrink-0 self-end md:self-auto">
+                            {isCollapsed && (
+                              <div className="hidden lg:flex items-center gap-2 text-[11px] font-bold text-muted-foreground">
+                                <span className="px-2 py-0.5 rounded bg-muted">Video {videoCleared}/4</span>
+                                <span className="px-2 py-0.5 rounded bg-muted">Audio {audioCleared}/2</span>
+                                <span className="px-2 py-0.5 rounded bg-muted">Quiz {quizCleared}/4</span>
+                              </div>
+                            )}
+
+                            <div className="flex flex-col md:items-end gap-1.5 shrink-0">
+                              <div className="flex items-center gap-2 text-xs font-bold">
+                                <span className="text-primary font-mono">{approvedCount}/{chapterItems.length} Cleared</span>
+                                <span className="px-2 py-0.5 rounded bg-primary/10 text-primary font-mono">{progressPct}%</span>
+                              </div>
+                              <div className="w-36 md:w-44 h-2 bg-muted rounded-full overflow-hidden border border-border">
+                                <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${progressPct}%` }} />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Chapter Tracks Matrix (Expandable) */}
+                        {!isCollapsed && (
+                          <div className="p-4 md:p-6 space-y-6">
+                            
+                            {/* Pod 1: Script & Pedagogy Baseline Pod */}
+                            <div className="p-3.5 rounded-2xl bg-amber-500/[0.02] border border-amber-500/20 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                                  <FileText className="h-3.5 w-3.5" />
+                                  <span>Pod 1 · Script & Pedagogical Direction (Baseline & Final HB Review)</span>
+                                </div>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">
+                                  Editorial Guardrails
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {renderTrackNode('1. Script Draft', scriptItem, 'bg-amber-500/10 text-amber-600 border-amber-500/30')}
+                                {renderTrackNode('5. HB Review (Final Director Clearance)', hbItem, 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30')}
+                              </div>
+                            </div>
+
+                            {/* Pod 2: Video Production Pipeline Pod */}
+                            <div className="p-3.5 rounded-2xl bg-blue-500/[0.02] border border-blue-500/20 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div className="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                                  <Video className="h-3.5 w-3.5" />
+                                  <span>Pod 2 · Video Multi-Level Track (L1 → L2 → L3 → L4)</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] text-muted-foreground font-medium hidden sm:inline">Sequential or parallel review staging</span>
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600">
+                                    {videoCleared}/4 Cleared
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                {renderTrackNode('Video: L1 (Tech QC)', vidL1, 'bg-blue-500/10 text-blue-500 border-blue-500/20')}
+                                {renderTrackNode('Video: L2 (3D Motion)', vidL2, 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20')}
+                                {renderTrackNode('Video: L3 (Fine Polish)', vidL3, 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20')}
+                                {renderTrackNode('Video: L4 (4K Master)', vidL4, 'bg-purple-500/10 text-purple-500 border-purple-500/20')}
+                              </div>
+                            </div>
+
+                            {/* Pod 3: Audio & Sound Pipeline Pod */}
+                            <div className="p-3.5 rounded-2xl bg-purple-500/[0.02] border border-purple-500/20 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div className="text-[11px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+                                  <Mic className="h-3.5 w-3.5" />
+                                  <span>Pod 3 · Audio & Voiceover Track (L1 → L2)</span>
+                                </div>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600">
+                                  {audioCleared}/2 Cleared
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {renderTrackNode('Audio: L1 (Voiceover EQ)', audL1, 'bg-purple-500/10 text-purple-500 border-purple-500/20')}
+                                {renderTrackNode('Audio: L2 (SFX & Ambience)', audL2, 'bg-fuchsia-500/10 text-fuchsia-500 border-fuchsia-500/20')}
+                              </div>
+                            </div>
+
+                            {/* Pod 4: Interactive Quiz & Pedagogical Assessment Pod */}
+                            <div className="p-3.5 rounded-2xl bg-emerald-500/[0.02] border border-emerald-500/20 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                                  <CheckSquare className="h-3.5 w-3.5" />
+                                  <span>Pod 4 · Interactive Quiz Track (Generation → Review → Implementation → Testing)</span>
+                                </div>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">
+                                  {quizCleared}/4 Cleared
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                {renderTrackNode('Quiz: Generation', quizGen, 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20')}
+                                {renderTrackNode('Quiz: Review', quizRev, 'bg-teal-500/10 text-teal-600 border-teal-500/20')}
+                                {renderTrackNode('Quiz: Implementation', quizImp, 'bg-amber-500/10 text-amber-600 border-amber-500/20')}
+                                {renderTrackNode('Quiz: Testing QA', quizTest, 'bg-rose-500/10 text-rose-600 border-rose-500/20')}
+                              </div>
+                            </div>
+
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+              </>
             )}
           </div>
         )}
-      </div>
+      </>
+    )}
+  </div>
 
       {/* Frame.io Style Asset Review Drawer Modal */}
       {activeReviewItem && (

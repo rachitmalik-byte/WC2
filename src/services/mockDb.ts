@@ -990,103 +990,164 @@ const MOCK_REMINDERS: Reminder[] = [
   }
 ];
 
-// Slack-like Channels
+// IXR Studio Production Channels
 const MOCK_CHANNELS: Channel[] = [
   {
-    id: 'chan-1',
-    name: 'everyone',
-    description: 'Company-wide announcements and updates.',
+    id: 'chan-announcements',
+    name: 'announcements',
+    description: 'Studio-wide delivery milestones, master sign-offs, and critical updates.',
     is_private: false,
-    created_by: 'head-1',
+    created_by: 'ceo-1',
     created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-    member_ids: ['head-1', 'specialist-1', 'specialist-2', 'specialist-3']
+    member_ids: ['ceo-1', 'head-ixr-1', 'hb-rev-1', 'vid-rev-1', 'video-ed-1', 'audio-gen-1', 'quiz-imp-1', 'quiz-gen-1']
   },
   {
-    id: 'chan-2',
-    name: 'heads-only',
-    description: 'Private channel for Heads of Growth.',
-    is_private: true,
-    created_by: 'head-1',
-    created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-    member_ids: ['head-1']
-  },
-  {
-    id: 'chan-3',
-    name: 'specialists-only',
-    description: 'Discussion channel for Growth Specialists.',
+    id: 'chan-ch01-optics',
+    name: 'ch01-optics-production',
+    description: 'Chapter 01: Optics & Refraction cross-functional sprint (Script, Video L1-4, Audio, Quiz).',
     is_private: false,
-    created_by: 'head-1',
+    created_by: 'head-ixr-1',
+    created_at: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
+    member_ids: ['head-ixr-1', 'vid-rev-1', 'video-ed-1', 'audio-gen-1', 'quiz-imp-1', 'hb-rev-1']
+  },
+  {
+    id: 'chan-ch02-circuits',
+    name: 'ch02-circuits-production',
+    description: 'Chapter 02: Electricity & Circuits interactive 3D lab discussion.',
+    is_private: false,
+    created_by: 'head-ixr-1',
+    created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+    member_ids: ['head-ixr-1', 'vid-rev-1', 'video-ed-1', 'audio-gen-1', 'quiz-imp-1']
+  },
+  {
+    id: 'chan-video-vfx',
+    name: 'video-and-animation',
+    description: 'Motion graphics, 3D visual assets, Premiere cuts, and L1-L4 review rounds.',
+    is_private: false,
+    created_by: 'vid-rev-1',
     created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-    member_ids: ['specialist-1', 'specialist-2', 'specialist-3']
+    member_ids: ['vid-rev-1', 'video-ed-1', 'head-ixr-1']
+  },
+  {
+    id: 'chan-audio-sound',
+    name: 'audio-and-sound',
+    description: 'Voiceover recordings, Foley sound effects, EQ balancing, and stem deliveries.',
+    is_private: false,
+    created_by: 'audio-gen-1',
+    created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+    member_ids: ['audio-gen-1', 'video-ed-1', 'head-ixr-1']
+  },
+  {
+    id: 'chan-quiz-pedagogy',
+    name: 'quiz-and-pedagogy',
+    description: 'Curriculum compliance, interactive quiz widgets, formula calculations, and QA testing.',
+    is_private: false,
+    created_by: 'quiz-imp-1',
+    created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+    member_ids: ['quiz-imp-1', 'quiz-gen-1', 'hb-rev-1']
+  },
+  {
+    id: 'chan-client-direct',
+    name: 'client-direct-directives',
+    description: '🔒 Confidential direct channel between Client (Dr. Vance), Head of IXR (Elena Rostova), and CEO (Ashish Garg).',
+    is_private: true,
+    created_by: 'client-rep-1',
+    created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+    member_ids: ['client-rep-1', 'head-ixr-1', 'ceo-1']
   }
 ];
 
-// Messaging History
+// Realistic IXR Messaging History with Deliverable Tags
 const MOCK_MESSAGES: Message[] = [
   {
     id: 'msg-1',
-    channel_id: 'chan-1',
-    sender_id: 'head-1',
-    content: 'Welcome team to RelayHQ! This will be our central workspace for managing campaigns, tracking tasks, and handling client relationships. Let me know if you face any issues.',
+    channel_id: 'chan-announcements',
+    sender_id: 'ceo-1',
+    content: '🚀 Welcome to WC 2.0! We have transitioned away from clunky Excel sheets and Slack threads. All Chapter deliverables, L1–L4 review rounds, and timestamped Frame.io remarks will now be tracked here directly.',
     attachments: [],
     created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
   },
   {
     id: 'msg-2',
-    channel_id: 'chan-1',
-    sender_id: 'specialist-1',
-    content: 'Awesome! Glad to have this workspace. It feels super snappy.',
+    channel_id: 'chan-announcements',
+    sender_id: 'head-ixr-1',
+    content: '📢 Ministry inspection deadline for Class 10 Physics is set for next Thursday. Please ensure Chapter 01 Optics (Video L3, Audio Mix, and Quiz QA) are cleared on schedule.',
     attachments: [],
-    created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000 + 5 * 60000).toISOString()
+    created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString()
   },
   {
     id: 'msg-3',
-    channel_id: 'chan-2',
-    sender_id: 'specialist-2',
-    content: 'Hey guys, are we seeing lower reply rates on cold LinkedIn messages lately? Let us audit our standard connection templates.',
+    channel_id: 'chan-ch01-optics',
+    sender_id: 'vid-rev-1',
+    content: 'Hey Alex @alex.r, I reviewed the latest render for [asset:c1-vid-l2]. The laser beam glow effect is much cleaner in v2, but check the HB blocker note at 01:24 regarding the Snell Law formula subscript.',
     attachments: [],
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+    created_at: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString()
   },
   {
     id: 'msg-4',
-    channel_id: 'chan-2',
-    sender_id: 'specialist-1',
-    content: 'I have had success customizing the intro to focus on their specific tech stack. Here is the template I use:\n\n*Hey [Prospect], noticed you are using React and Tailwind. We recently helped a startup scale their React team by 3x. Are you looking to hire?*',
+    channel_id: 'chan-ch01-optics',
+    sender_id: 'video-ed-1',
+    content: 'Got it Rachit! Uploading revision v3 shortly with the corrected n_glass subscript notation. Priya @elena.r, could you verify the narration sync at timestamp 01:20?',
     attachments: [],
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 + 10 * 60000).toISOString()
+    created_at: new Date(Date.now() - 14 * 60 * 60 * 1000).toISOString()
   },
   {
     id: 'msg-5',
-    channel_id: 'chan-3',
-    sender_id: 'head-1',
-    content: 'Hey Alex, do we have updates on Stark Industries? PEPPER POTTS is asking about custom SLA pricing.',
+    channel_id: 'chan-ch01-optics',
+    sender_id: 'audio-gen-1',
+    content: 'Yes! The Foley sound effects for the prism light beam are mastered in [asset:c1-aud-l1]. Running at -14 LUFS standard.',
     attachments: [],
-    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+    created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
   },
   {
     id: 'msg-6',
-    channel_id: 'chan-3',
-    sender_id: 'specialist-1',
-    content: 'Yes! I uploaded the draft custom proposal on their lead card. We are meeting this Friday to negotiate pricing tiers.',
+    channel_id: 'chan-video-vfx',
+    sender_id: 'video-ed-1',
+    content: 'Working on Chapter 01 Ray Tracer [asset:c1-vid-l2]. Rendering out the 60fps 4K pass now. If anyone notices jitter on the normal angle vector, let me know.',
     attachments: [],
-    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 15 * 60000).toISOString()
+    created_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString()
   },
-  // Direct Messages (DMs) - Simulated as message entries where channel_id is undefined
+  {
+    id: 'msg-7',
+    channel_id: 'chan-quiz-pedagogy',
+    sender_id: 'quiz-imp-1',
+    content: 'The interactive ray-tracing canvas widget [asset:c1-quiz-imp] is now connected to the scoring API. Tested across iPad Safari and Chrome Desktop.',
+    attachments: [],
+    created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
+  },
+  // Confidential Client Direct Channel (Restricted to Client, Head of IXR, CEO)
+  {
+    id: 'msg-priv-1',
+    channel_id: 'chan-client-direct',
+    sender_id: 'client-rep-1',
+    content: '⚠️ Confidential Directive: Dr. Alistair Vance here. The pacing in cut v2 of the Optics chapter is slower than our curriculum target. If v3 is not approved by tomorrow noon, please reassign to senior motion lead per our discreet protocol.',
+    attachments: [],
+    created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    id: 'msg-priv-2',
+    channel_id: 'chan-client-direct',
+    sender_id: 'head-ixr-1',
+    content: 'Understood Dr. Vance. I am actively supervising the v3 export with Alex and have senior backup ready on standby. We will maintain strict timeline compliance.',
+    attachments: [],
+    created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+  },
+  // Direct Messages (DMs)
   {
     id: 'msg-dm-1',
-    sender_id: 'specialist-1',
-    receiver_id: 'specialist-2',
-    content: 'Hey Elena, could you take a quick look at Nova Media? They requested a growth pilot proposal, and I know you handled a similar one last month.',
+    sender_id: 'vid-rev-1',
+    receiver_id: 'video-ed-1',
+    content: 'Hey Alex, quick heads up: make sure to keep the Snell formula card on screen for at least 6 seconds so students have time to read the derivation.',
     attachments: [],
-    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+    created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
   },
   {
     id: 'msg-dm-2',
-    sender_id: 'specialist-2',
-    receiver_id: 'specialist-1',
-    content: 'Sure! I will check the shared proposal templates folder. The core thing is highlighting our turnaround SLAs. I can write down some bullet points.',
+    sender_id: 'video-ed-1',
+    receiver_id: 'vid-rev-1',
+    content: 'Will do Rachit, extended the hold to 7.5 seconds with a smooth highlight keyframe.',
     attachments: [],
-    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000 + 20 * 60000).toISOString()
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
   }
 ];
 
@@ -1179,16 +1240,20 @@ class MemoryDB {
   })();
   channels = (() => {
     try {
-      const stored = localStorage.getItem('wc2_channels');
-      return stored ? JSON.parse(stored) : [...MOCK_CHANNELS];
+      const stored = localStorage.getItem('wc2_channels_v3');
+      if (stored) return JSON.parse(stored);
+      localStorage.removeItem('wc2_channels');
+      return [...MOCK_CHANNELS];
     } catch {
       return [...MOCK_CHANNELS];
     }
   })();
   messages = (() => {
     try {
-      const stored = localStorage.getItem('wc2_messages');
-      return stored ? JSON.parse(stored) : [...MOCK_MESSAGES];
+      const stored = localStorage.getItem('wc2_messages_v3');
+      if (stored) return JSON.parse(stored);
+      localStorage.removeItem('wc2_messages');
+      return [...MOCK_MESSAGES];
     } catch {
       return [...MOCK_MESSAGES];
     }
@@ -1278,8 +1343,8 @@ class MemoryDB {
       if (table === 'lead_attachments') localStorage.setItem('wc2_lead_attachments', JSON.stringify(this.leadAttachments));
       if (table === 'tasks') localStorage.setItem('wc2_tasks', JSON.stringify(this.tasks));
       if (table === 'reminders') localStorage.setItem('wc2_reminders', JSON.stringify(this.reminders));
-      if (table === 'channels') localStorage.setItem('wc2_channels', JSON.stringify(this.channels));
-      if (table === 'messages') localStorage.setItem('wc2_messages', JSON.stringify(this.messages));
+      if (table === 'channels') localStorage.setItem('wc2_channels_v3', JSON.stringify(this.channels));
+      if (table === 'messages') localStorage.setItem('wc2_messages_v3', JSON.stringify(this.messages));
       if (table === 'notifications') localStorage.setItem('wc2_notifications', JSON.stringify(this.notifications));
       if (table === 'personal_notes') localStorage.setItem('wc2_personal_notes', JSON.stringify(this.personalNotes));
     } catch (e) {
@@ -1703,7 +1768,9 @@ class MemoryDB {
 
   // Slack-style Messaging CRUD
   getChannels(userId: string, role: string): Channel[] {
-    if (role === 'head') return this.channels;
+    const user = this.profiles.find(p => p.id === userId);
+    const isPrivileged = role === 'head' || role === 'client' || (user?.designation?.toLowerCase().includes('ceo') ?? false);
+    if (isPrivileged) return this.channels;
     return this.channels.filter((c) => !c.is_private || c.member_ids?.includes(userId));
   }
 
