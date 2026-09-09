@@ -1,502 +1,548 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../../services/supabase';
+import React, { useState } from 'react';
+import type { UserRole, Profile } from '../../types/database';
 import { dbClient } from '../../services/dbClient';
-import { Mail, Lock, User, AlertCircle, Loader2, Eye, EyeOff, Shield, MessageSquare, Bell, Sliders } from 'lucide-react';
+import {
+  Shield, CheckCircle2, Sparkles, Video, Mic,
+  BookOpen, CheckSquare, Layers, ArrowRight, Zap,
+  Lock, ChevronDown, ChevronUp, UserPlus, SlidersHorizontal
+} from 'lucide-react';
 
 interface AuthPageProps {
-  onBypass: () => void;
-  onSuccess: () => void;
+  onBypass: (userId?: string) => void;
+  onSuccess?: () => void;
 }
 
-const slides = [
+interface TestSubject {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  designation: string;
+  department: 'Leadership' | 'Reviewers' | 'Creators';
+  presence: 'online' | 'idle' | 'busy';
+  color: string;
+  icon: any;
+  powers: string[];
+}
+
+const TEST_SUBJECTS: TestSubject[] = [
   {
-    title: "Execution Center",
-    description: "Manage high-intent outbound leads, orchestrate sales campaigns, and inspect proposal timeline events in real-time.",
+    id: 'head-1',
+    name: 'Sarah Jenkins',
+    email: 'sarah.j@relayhq.com',
+    role: 'head',
+    designation: 'Head of IXR & Production',
+    department: 'Leadership',
+    presence: 'online',
+    color: 'from-purple-500/20 to-indigo-500/20 text-purple-400 border-purple-500/30',
+    icon: Layers,
+    powers: [
+      '🎬 Oversee All Classes (Class 10th Maths, Class 12th Physics)',
+      '⚡ Toggle Parallel Review Mode (Permit L4 review before L1 completion)',
+      '📝 Approve L1–L4 review tiers & deliver assets',
+      '🤝 Audit Team Turnover Ledger & Handover logs'
+    ]
+  },
+  {
+    id: 'ceo-1',
+    name: 'Ashish Garg',
+    email: 'ashish.garg@vaidikedu.com',
+    role: 'head',
+    designation: 'Chief Executive Officer',
+    department: 'Leadership',
+    presence: 'online',
+    color: 'from-amber-500/20 to-orange-500/20 text-amber-500 border-amber-500/30',
     icon: Shield,
-    badge: "Operational Control",
-    color: "from-blue-600/30 to-indigo-600/30",
-    glow: "bg-blue-500/10"
+    powers: [
+      '👑 Executive Organization Oversight & Master Controls',
+      '🔓 Final Signoff (Approved Final) & Gate Override',
+      '📊 Cross-Class Velocity & Pipeline Health Analytics',
+      '👥 Department Structure & Role Management'
+    ]
   },
   {
-    title: "Omnichannel Messaging",
-    description: "Synchronized chat conversations, Google Chat webhook mirror, and instant team notifications to eliminate response friction.",
-    icon: MessageSquare,
-    badge: "Connected Collaboration",
-    color: "from-emerald-600/30 to-teal-600/30",
-    glow: "bg-emerald-500/10"
+    id: 'hb-rev-1',
+    name: 'Arjab Jain',
+    email: 'arjab.jain@vaidikedu.com',
+    role: 'hb_reviewer',
+    designation: 'Lead Handbook (HB) & Pedagogy Reviewer',
+    department: 'Reviewers',
+    presence: 'online',
+    color: 'from-blue-500/20 to-cyan-500/20 text-blue-400 border-blue-500/30',
+    icon: BookOpen,
+    powers: [
+      '📖 Handbook Syllabus & Curriculum Accuracy Verification',
+      '🚩 Log Critical Blocker Remarks linked to formula/slide targets',
+      '⚡ Work in Parallel Review Mode while L1 tech checks run',
+      '🔄 Sign off L2/L3 Pedagogy stage to unblock delivery'
+    ]
   },
   {
-    title: "Automated Reminders",
-    description: "Desktop push alerts, customizable audio alarm profiles, and calendars designed to ensure no lead goes cold.",
-    icon: Bell,
-    badge: "Proactive Alarms",
-    color: "from-amber-600/30 to-orange-600/30",
-    glow: "bg-amber-500/10"
+    id: 'vid-rev-1',
+    name: 'Rachit Malik',
+    email: 'rachit.malik@vaidikedu.com',
+    role: 'video_reviewer',
+    designation: 'Technical Video Reviewer (L1/L2 Lead)',
+    department: 'Reviewers',
+    presence: 'online',
+    color: 'from-emerald-500/20 to-teal-500/20 text-emerald-400 border-emerald-500/30',
+    icon: Video,
+    powers: [
+      '🔍 Frame-by-Frame Technical QC (audio sync, cuts, aspect ratios)',
+      '⏱️ Drop exact MM:SS video timeline review markers',
+      '🚦 Advance review pipeline from L1 to L2',
+      '❌ Request draft corrections from video editors'
+    ]
   },
   {
-    title: "Premium Interfaces",
-    description: "Swap presentation aesthetics dynamically. Choose from 6 responsive presets: Glassmorphism, Neobrutalist, Scandinavian, and more.",
-    icon: Sliders,
-    badge: "Bespoke Personalization",
-    color: "from-fuchsia-600/30 to-pink-600/30",
-    glow: "bg-fuchsia-500/10"
+    id: 'video-ed-1',
+    name: 'Alex Rivera',
+    email: 'alex.r@relayhq.com',
+    role: 'video_editor',
+    designation: 'Lead Video Editor (3D & Motion)',
+    department: 'Creators',
+    presence: 'online',
+    color: 'from-rose-500/20 to-pink-500/20 text-rose-400 border-rose-500/30',
+    icon: Video,
+    powers: [
+      '🎥 Access assigned video queue & script briefs',
+      '📤 Upload new asset revision drafts (v1 → v2 → v3)',
+      '✅ Resolve remarks with revision audit comments',
+      '🤝 1-Click Role Handover when rebalancing workload or taking leave'
+    ]
+  },
+  {
+    id: 'audio-gen-1',
+    name: 'Elena Rostova',
+    email: 'elena.r@relayhq.com',
+    role: 'audio_generator',
+    designation: 'Audio Generator & Voiceover Artist',
+    department: 'Creators',
+    presence: 'idle',
+    color: 'from-violet-500/20 to-fuchsia-500/20 text-violet-400 border-violet-500/30',
+    icon: Mic,
+    powers: [
+      '🎙️ AI/Human voiceover generation & waveform sync',
+      '🎧 Sound level & pronunciation remark inspection',
+      '📤 Upload revision audio tracks and stems',
+      '✅ Close audio QC remarks'
+    ]
+  },
+  {
+    id: 'quiz-imp-1',
+    name: 'Marcus Chen',
+    email: 'marcus.c@relayhq.com',
+    role: 'quiz_implementer',
+    designation: 'Quiz Implementer & Interactive Dev',
+    department: 'Creators',
+    presence: 'busy',
+    color: 'from-yellow-500/20 to-amber-500/20 text-yellow-400 border-yellow-500/30',
+    icon: CheckSquare,
+    powers: [
+      '🧩 Interactive exercise coding & LMS SCORM packaging',
+      '🎯 Math formula parsing & option layout fixes',
+      '📤 Submit updated quiz builds for reviewer check',
+      '✅ Resolve interactive logic remarks'
+    ]
+  },
+  {
+    id: 'quiz-gen-1',
+    name: 'Jane Doe',
+    email: 'jane.d@relayhq.com',
+    role: 'quiz_generator',
+    designation: 'Subject SME & Quiz Generator',
+    department: 'Creators',
+    presence: 'online',
+    color: 'from-sky-500/20 to-blue-500/20 text-sky-400 border-sky-500/30',
+    icon: BookOpen,
+    powers: [
+      '📚 Curriculum question authoring & difficulty balancing',
+      '✏️ Formulate new quiz items and practice assessments',
+      '💬 Add pedagogical guidance notes for video & HB teams',
+      '🤝 Role handoffs to quiz implementers'
+    ]
   }
 ];
 
-export const AuthPage: React.FC<AuthPageProps> = ({ onBypass, onSuccess }) => {
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState<'head' | 'growth_specialist'>('growth_specialist');
-  const [designation, setDesignation] = useState('');
+export const AuthPage: React.FC<AuthPageProps> = ({ onBypass }) => {
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>('head-1');
+  const [activeFilter, setActiveFilter] = useState<'All' | 'Leadership' | 'Reviewers' | 'Creators'>('All');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Custom persona creation state
+  const [showCustomModal, setShowCustomModal] = useState(false);
+  const [customName, setCustomName] = useState('');
+  const [customRole, setCustomRole] = useState<UserRole>('video_editor');
+  const [customDesignation, setCustomDesignation] = useState('');
 
-  const [currentSlide, setCurrentSlide] = useState(0);
+  // Future production auth explanation accordion
+  const [showRealAuthInfo, setShowRealAuthInfo] = useState(false);
 
-  // Auto slide rotation
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
+  const selectedSubject = TEST_SUBJECTS.find(s => s.id === selectedSubjectId) || TEST_SUBJECTS[0];
 
-  const handleAuth = async (e: React.FormEvent) => {
+  const handleInstantLogin = (subjectId?: string) => {
+    setIsLoggingIn(true);
+    const targetId = subjectId || selectedSubjectId;
+    setTimeout(() => {
+      onBypass(targetId);
+    }, 200);
+  };
+
+  const handleCreateCustomPersona = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!supabase) {
-      setError('Supabase client is not initialized. Please verify configuration keys.');
-      return;
-    }
-
-    if (!email.trim() || !password.trim()) {
-      setError('Please fill in all credentials.');
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
+    if (!customName.trim()) return;
+    setIsLoggingIn(true);
 
     try {
-      if (isSignUp) {
-        if (!fullName.trim()) {
-          setError('Please specify your Full Name.');
-          setIsLoading(false);
-          return;
-        }
+      const newProfile: Omit<Profile, 'id' | 'created_at' | 'updated_at'> = {
+        full_name: customName.trim(),
+        email: `${customName.toLowerCase().replace(/\s+/g, '.')}@trial.local`,
+        role: customRole,
+        designation: customDesignation.trim() || `Custom ${customRole.replace(/_/g, ' ')}`,
+        status: 'active',
+        presence: 'online'
+      };
 
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email: email.trim(),
-          password: password.trim(),
-        });
-
-        if (signUpError) throw signUpError;
-
-        if (data?.user) {
-          // Fallback: create profile record
-          const { error: profileError } = await supabase.from('profiles').insert({
-            id: data.user.id,
-            full_name: fullName.trim(),
-            email: email.trim(),
-            role: role,
-            designation: designation.trim() || (role === 'head' ? 'Head of Growth' : 'Growth Specialist'),
-            status: 'active'
-          });
-          if (profileError) console.error('Profile creation error:', profileError);
-        }
-
-        alert('Account created successfully! Please sign in with your credentials.');
-        setIsSignUp(false);
-        setPassword('');
-      } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password: password.trim(),
-        });
-
-        if (signInError) throw signInError;
-        onSuccess();
-      }
-    } catch (err: any) {
-      setError(err.message || 'Authentication failed. Please verify credentials.');
-    } finally {
-      setIsLoading(false);
+      const created = await dbClient.createProfile(newProfile);
+      onBypass(created.id);
+    } catch (err) {
+      console.error('Failed to create custom test profile:', err);
+      setIsLoggingIn(false);
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    if (!supabase) {
-      setError('Please configure your production database credentials below first.');
-      setShowDbConfig(true);
-      return;
-    }
-    setIsLoading(true);
-    setError(null);
-    try {
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-          scopes: 'https://www.googleapis.com/auth/chat.spaces.readonly https://www.googleapis.com/auth/chat.messages.readonly https://www.googleapis.com/auth/chat.messages.create'
-        }
-      });
-      if (oauthError) throw oauthError;
-    } catch (err: any) {
-      setError(err.message || 'Failed to start Google OAuth.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const [showDbConfig, setShowDbConfig] = useState(false);
-  const [dbUrl, setDbUrl] = useState('');
-  const [dbKey, setDbKey] = useState('');
-
-  const handleSaveDbConfig = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!dbUrl.trim() || !dbKey.trim()) {
-      setError('Please provide both Supabase URL and Anon Key.');
-      return;
-    }
-    dbClient.setSupabaseConfig(dbUrl.trim(), dbKey.trim());
-    alert('Production database credentials applied! Reloading...');
-    window.location.reload();
-  };
-
-  const activeSlide = slides[currentSlide];
-  const SlideIcon = activeSlide.icon;
+  const filteredSubjects = activeFilter === 'All'
+    ? TEST_SUBJECTS
+    : TEST_SUBJECTS.filter(s => s.department === activeFilter);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen bg-background">
-      
-      {/* Left Column - Auth Form */}
-      <div className="lg:col-span-5 flex flex-col justify-between p-6 sm:p-12 md:p-16 bg-background border-r border-border">
+    <div className="min-h-screen w-full bg-background text-foreground flex flex-col items-center justify-between p-4 sm:p-6 md:p-8">
+      {/* Background Decorative Gradients */}
+      <div className="fixed inset-0 pointer-events-none opacity-25 overflow-hidden">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/2 -right-40 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 left-1/3 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-6xl z-10 flex flex-col items-center space-y-6 flex-1 justify-center">
         
-        {/* Header Branding */}
-        <div className="flex items-center gap-2.5 mb-8 lg:mb-0">
-          <div className="flex h-9 w-9 items-center justify-center rounded bg-primary text-primary-foreground font-black text-lg shadow-sm">
-            R
+        {/* Top Header Card */}
+        <div className="w-full text-center space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-bold tracking-wide shadow-sm">
+            <Zap className="h-3.5 w-3.5 fill-primary text-primary" />
+            <span>WC 2.0 • TEST FLIGHT SIMULATOR</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-success animate-ping" />
           </div>
-          <div>
-            <h2 className="text-base font-extrabold text-foreground tracking-tight leading-none">RelayHQ</h2>
-            <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">Workflow Command Center</p>
+
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">
+            IXR & Content Operations Cockpit
+          </h1>
+
+          <p className="max-w-2xl mx-auto text-xs sm:text-sm text-muted-foreground leading-relaxed">
+            Authentication is pre-bypassed for rapid trial testing. Choose any test subject below to simulate their exact workflow powers, review tier authority, and handover capabilities.
+          </p>
+
+          {/* Instant Default Quick Login Callout */}
+          <div className="pt-2 flex items-center justify-center gap-3 flex-wrap">
+            <button
+              onClick={() => handleInstantLogin('head-1')}
+              disabled={isLoggingIn}
+              className="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold shadow-lg shadow-primary/20 transition-all transform active:scale-95 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              <Zap className="h-4 w-4" />
+              <span>Instant 1-Click Login (Sarah Jenkins • Head of IXR)</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+
+            <button
+              onClick={() => setShowCustomModal(true)}
+              className="px-4 py-2.5 rounded-xl bg-card border border-border hover:bg-muted text-foreground text-xs font-semibold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <UserPlus className="h-4 w-4 text-primary" />
+              <span>Add Custom Tester Persona</span>
+            </button>
           </div>
         </div>
 
-        {/* Auth Box */}
-        <div className="w-full max-w-md mx-auto my-auto space-y-6">
-          <div className="space-y-1.5">
-            <h1 className="text-2xl font-black text-foreground tracking-tight">
-              {isSignUp ? 'Create your profile' : 'Sign in to workspace'}
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              {isSignUp ? 'Get setup with teammate privileges' : 'Enter your workspace credentials to continue'}
-            </p>
-          </div>
+        {/* Filter Pills */}
+        <div className="flex items-center justify-center gap-2 pt-2 flex-wrap">
+          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mr-1 flex items-center gap-1">
+            <SlidersHorizontal className="h-3 w-3" />
+            <span>Role Filter:</span>
+          </span>
+          {(['All', 'Leadership', 'Reviewers', 'Creators'] as const).map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeFilter === filter
+                  ? 'bg-foreground text-background shadow-sm'
+                  : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
 
-          {error && (
-            <div className="flex items-start gap-2.5 bg-danger/10 border border-danger/20 p-3 rounded-lg text-danger text-xs text-left animate-none">
-              <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
+        {/* Test Personas Grid */}
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          {filteredSubjects.map((subject) => {
+            const isSelected = subject.id === selectedSubjectId;
+            const Icon = subject.icon;
 
-          <form onSubmit={handleAuth} className="space-y-4 text-left">
-            {isSignUp && (
-              <>
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                    Full Name
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground/60" />
-                    <input
-                      type="text"
-                      required
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="John Doe"
-                      className="w-full pl-10 pr-3 py-2 border border-border bg-background text-foreground text-xs rounded-lg focus:outline-none focus:border-primary transition-colors"
-                    />
+            return (
+              <div
+                key={subject.id}
+                onClick={() => setSelectedSubjectId(subject.id)}
+                className={`relative rounded-xl border p-4 transition-all text-left flex flex-col justify-between cursor-pointer group ${
+                  isSelected
+                    ? 'bg-card border-primary ring-2 ring-primary/20 shadow-md transform -translate-y-0.5'
+                    : 'bg-card/70 hover:bg-card border-border hover:border-primary/40 shadow-sm'
+                }`}
+              >
+                {/* Active selection tick */}
+                {isSelected && (
+                  <div className="absolute top-3 right-3 h-5 w-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  </div>
+                )}
+
+                {/* Profile Header */}
+                <div>
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="relative">
+                      <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${subject.color} flex items-center justify-center font-bold text-sm border shadow-inner`}>
+                        {subject.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      </div>
+                      <span
+                        className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-card ${
+                          subject.presence === 'online' ? 'bg-emerald-500' :
+                          subject.presence === 'busy' ? 'bg-rose-500' : 'bg-amber-500'
+                        }`}
+                        title={`Status: ${subject.presence}`}
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1 pr-4">
+                      <h3 className="text-xs font-bold text-foreground truncate group-hover:text-primary transition-colors">
+                        {subject.name}
+                      </h3>
+                      <p className="text-[10px] text-muted-foreground truncate font-medium">
+                        {subject.designation}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Role & Department Badge */}
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-muted text-muted-foreground uppercase tracking-wider">
+                      {subject.department}
+                    </span>
+                    <span className="text-[9px] font-semibold px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 flex items-center gap-1">
+                      <Icon className="h-2.5 w-2.5" />
+                      <span>{subject.role.replace(/_/g, ' ')}</span>
+                    </span>
+                  </div>
+
+                  {/* Testing Powers list */}
+                  <div className="space-y-1.5 my-2">
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                      <Sparkles className="h-2.5 w-2.5 text-primary" />
+                      <span>Role Powers in Trial:</span>
+                    </p>
+                    <ul className="space-y-1 text-[11px] text-foreground/90 font-medium">
+                      {subject.powers.slice(0, 3).map((p, idx) => (
+                        <li key={idx} className="flex items-start gap-1.5 leading-tight">
+                          <span className="text-primary text-xs mt-0.5 flex-shrink-0">•</span>
+                          <span className="truncate">{p}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                    Designation / Job Title
-                  </label>
-                  <input
-                    type="text"
-                    value={designation}
-                    onChange={(e) => setDesignation(e.target.value)}
-                    placeholder="e.g. Senior SDR, VP of Sales"
-                    className="w-full px-3 py-2 border border-border bg-background text-foreground text-xs rounded-lg focus:outline-none focus:border-primary transition-colors"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                    Workspace Permission Role
-                  </label>
-                  <select
-                    value={role}
-                    onChange={(e) => setRole(e.target.value as 'head' | 'growth_specialist')}
-                    className="w-full px-3 py-2 border border-border bg-background text-foreground text-xs rounded-lg focus:outline-none focus:border-primary font-semibold cursor-pointer"
+                {/* Login Button */}
+                <div className="mt-4 pt-3 border-t border-border">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleInstantLogin(subject.id);
+                    }}
+                    disabled={isLoggingIn}
+                    className={`w-full py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-primary text-primary-foreground hover:bg-primary/95 shadow-sm'
+                        : 'bg-muted hover:bg-primary/15 text-foreground hover:text-primary'
+                    }`}
                   >
-                    <option value="growth_specialist">Growth Specialist (Team Member)</option>
-                    <option value="head">Head of Growth (Administrator)</option>
-                  </select>
+                    <span>Login as {subject.name.split(' ')[0]}</span>
+                    <ArrowRight className="h-3 w-3" />
+                  </button>
                 </div>
-              </>
-            )}
-
-            <div className="space-y-1">
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                Work Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground/60" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@company.com"
-                  className="w-full pl-10 pr-3 py-2 border border-border bg-background text-foreground text-xs rounded-lg focus:outline-none focus:border-primary transition-colors"
-                />
               </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                Secure Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground/60" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-2 border border-border bg-background text-foreground text-xs rounded-lg focus:outline-none focus:border-primary transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-muted-foreground/60 hover:text-foreground focus:outline-none cursor-pointer flex items-center justify-center"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-2.5 bg-primary hover:bg-primary/95 text-primary-foreground rounded-lg text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : isSignUp ? (
-                'Create Workspace Account'
-              ) : (
-                'Sign In'
-              )}
-            </button>
-
-            {!isSignUp && (
-              <button
-                type="button"
-                onClick={handleGoogleSignIn}
-                disabled={isLoading}
-                className="w-full py-2.5 bg-white hover:bg-slate-50 border border-border text-slate-700 rounded-lg text-xs font-bold shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-65"
-              >
-                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                <span>Sign In with Google</span>
-              </button>
-            )}
-          </form>
-
-          <div className="text-center text-xs text-muted-foreground pt-1">
-            <p>
-              {isSignUp ? 'Already onboarded?' : 'Need a workspace profile?'}{' '}
-              <button
-                onClick={() => {
-                  setIsSignUp(!isSignUp);
-                  setError(null);
-                }}
-                className="text-primary hover:underline font-bold"
-              >
-                {isSignUp ? 'Sign In instead' : 'Register Profile'}
-              </button>
-            </p>
-          </div>
+            );
+          })}
         </div>
 
-        {/* Database Configuration Section */}
-        <div className="w-full max-w-md mx-auto mt-8 lg:mt-0 space-y-3 text-left bg-muted/30 border border-border/40 p-4 rounded-xl">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wide">
-              <span className={`h-1.5 w-1.5 rounded-full ${supabase ? 'bg-success animate-pulse' : 'bg-primary'}`} />
-              <span>{supabase ? 'Production Connected' : 'Offline Sandbox'}</span>
-            </span>
-            <button
-              type="button"
-              onClick={() => setShowDbConfig(!showDbConfig)}
-              className="text-[10px] text-primary font-bold hover:underline cursor-pointer"
-            >
-              {showDbConfig ? 'Hide Settings' : 'Configure Database'}
-            </button>
+        {/* Selected Persona Power Spotlight */}
+        <div className="w-full bg-card border border-border rounded-xl p-4 sm:p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className={`h-11 w-11 rounded-xl bg-gradient-to-br ${selectedSubject.color} flex items-center justify-center font-bold text-base border shadow-inner flex-shrink-0`}>
+              <selectedSubject.icon className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-sm font-bold text-foreground">
+                  Active Test Subject: {selectedSubject.name}
+                </h2>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                  {selectedSubject.designation}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Will enter WC 2.0 with <span className="text-foreground font-semibold">{selectedSubject.role}</span> pipeline access and testing capabilities.
+              </p>
+            </div>
           </div>
 
-          {showDbConfig && (
-            <form onSubmit={handleSaveDbConfig} className="space-y-3 mt-2.5 border-t border-border/40 pt-2.5">
+          <button
+            onClick={() => handleInstantLogin(selectedSubject.id)}
+            disabled={isLoggingIn}
+            className="w-full md:w-auto px-6 py-2.5 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-bold shadow-md shadow-primary/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+          >
+            <span>Enter WC 2.0 as {selectedSubject.name}</span>
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Collapsible: Future Real Supabase Auth Accordion */}
+        <div className="w-full max-w-3xl border border-border/60 bg-muted/20 rounded-xl overflow-hidden transition-all">
+          <button
+            type="button"
+            onClick={() => setShowRealAuthInfo(!showRealAuthInfo)}
+            className="w-full px-4 py-2.5 flex items-center justify-between text-xs text-muted-foreground hover:text-foreground font-medium transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+              <span>Production Supabase Authentication (Disabled During Pilot Trial)</span>
+            </div>
+            {showRealAuthInfo ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+
+          {showRealAuthInfo && (
+            <div className="px-4 pb-4 pt-1 text-xs text-muted-foreground border-t border-border/40 space-y-2 text-left bg-card/50">
+              <p>
+                <strong>Need real email/password or Google corporate SSO later?</strong>
+              </p>
+              <p>
+                As requested, the production login window has been bypassed with this instant test-subject selector so your team can test the IXR workflow without database configuration.
+              </p>
+              <p>
+                When your pilot succeeds and you want to lock the system down:
+              </p>
+              <ol className="list-decimal pl-5 space-y-1 text-[11px]">
+                <li>Create your database project in Supabase.</li>
+                <li>Run the provided <code className="bg-muted px-1.5 py-0.5 rounded text-foreground font-mono">schema_wc2.sql</code> script.</li>
+                <li>Set your <code className="bg-muted px-1.5 py-0.5 rounded text-foreground font-mono">VITE_SUPABASE_URL</code> and <code className="bg-muted px-1.5 py-0.5 rounded text-foreground font-mono">VITE_SUPABASE_ANON_KEY</code> in <code className="bg-muted px-1.5 py-0.5 rounded text-foreground font-mono">.env</code>.</li>
+              </ol>
+              <p className="text-[11px] text-primary font-semibold">
+                See <code className="underline">SETUP_SUPABASE.md</code> for full details.
+              </p>
+            </div>
+          )}
+        </div>
+
+      </div>
+
+      {/* Footer */}
+      <footer className="w-full text-center py-4 text-[11px] text-muted-foreground/80 z-10">
+        <span>WC 2.0 • IXR & Creative Operations Operating System • Offline Trial Sandbox</span>
+      </footer>
+
+      {/* Custom Test Persona Modal */}
+      {showCustomModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-card border border-border rounded-xl shadow-2xl p-6 text-left space-y-4 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center gap-2">
+                <UserPlus className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-bold text-foreground">Create Custom Test Persona</h3>
+              </div>
+              <button
+                onClick={() => setShowCustomModal(false)}
+                className="text-muted-foreground hover:text-foreground text-xs cursor-pointer font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateCustomPersona} className="space-y-3.5">
               <div>
                 <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
-                  Supabase Project URL
+                  Tester Full Name
                 </label>
                 <input
                   type="text"
                   required
-                  value={dbUrl}
-                  onChange={(e) => setDbUrl(e.target.value)}
-                  placeholder="https://xyz.supabase.co"
-                  className="w-full px-2.5 py-1.5 bg-background border border-border text-foreground text-xs rounded-lg focus:outline-none focus:border-primary font-mono"
+                  value={customName}
+                  onChange={(e) => setCustomName(e.target.value)}
+                  placeholder="e.g. Siddharth Verma"
+                  className="w-full px-3 py-2 border border-border bg-background text-foreground text-xs rounded-lg focus:outline-none focus:border-primary"
                 />
               </div>
+
               <div>
                 <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
-                  Anon API Key
+                  Pipeline Role
+                </label>
+                <select
+                  value={customRole}
+                  onChange={(e) => setCustomRole(e.target.value as UserRole)}
+                  className="w-full px-3 py-2 border border-border bg-background text-foreground text-xs rounded-lg focus:outline-none focus:border-primary cursor-pointer"
+                >
+                  <option value="head">👑 Head / Executive (Full Pipeline Control)</option>
+                  <option value="hb_reviewer">📖 Lead HB Reviewer (Handbook & Pedagogy)</option>
+                  <option value="video_reviewer">🔍 Video Reviewer (Technical QC & L1)</option>
+                  <option value="video_editor">🎬 Video Editor (3D & Motion Graphics)</option>
+                  <option value="audio_generator">🎙️ Audio & Voiceover Specialist</option>
+                  <option value="quiz_implementer">🧩 Quiz Implementer (Interactive Dev)</option>
+                  <option value="quiz_generator">📚 Quiz Generator (Subject SME)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
+                  Custom Designation (Optional)
                 </label>
                 <input
-                  type="password"
-                  required
-                  value={dbKey}
-                  onChange={(e) => setDbKey(e.target.value)}
-                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  className="w-full px-2.5 py-1.5 bg-background border border-border text-foreground text-xs rounded-lg focus:outline-none focus:border-primary font-mono"
+                  type="text"
+                  value={customDesignation}
+                  onChange={(e) => setCustomDesignation(e.target.value)}
+                  placeholder="e.g. Senior 3D Animator (Guest Tester)"
+                  className="w-full px-3 py-2 border border-border bg-background text-foreground text-xs rounded-lg focus:outline-none focus:border-primary"
                 />
               </div>
-              <button
-                type="submit"
-                className="w-full py-2 bg-primary text-primary-foreground text-[10px] font-bold rounded-lg hover:bg-primary/95 transition-colors cursor-pointer text-center"
-              >
-                Save and Connect Database
-              </button>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCustomModal(false)}
+                  className="px-3 py-2 rounded-lg text-xs font-semibold text-muted-foreground hover:bg-muted cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!customName.trim() || isLoggingIn}
+                  className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-bold shadow-sm cursor-pointer disabled:opacity-50"
+                >
+                  Create & Login Instantly
+                </button>
+              </div>
             </form>
-          )}
-
-          {!supabase && !showDbConfig && (
-            <p className="text-[10px] text-muted-foreground/80 leading-relaxed font-medium">
-              To connect your live database, click <strong>Configure Database</strong>. Otherwise, click below to review sandbox screens offline.
-            </p>
-          )}
-
-          {!showDbConfig && (
-            <button
-              onClick={onBypass}
-              className="w-full mt-1.5 py-2 bg-muted hover:bg-muted/80 text-foreground border border-border rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
-            >
-              Launch Offline Sandbox Simulator
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Right Column - Premium Showcase Slider */}
-      <div className="hidden lg:flex lg:col-span-7 bg-slate-950 text-white relative overflow-hidden flex-col justify-between p-12 select-none">
-        
-        {/* Floating gradient orbs */}
-        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          <div className={`absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-[120px] transition-all duration-1000 ease-in-out opacity-25 ${activeSlide.glow} animate-pulse`} />
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
-        </div>
-
-        {/* Top Header */}
-        <div className="relative z-10 flex items-center justify-between">
-          <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20">
-            Enterprise Grade CRM
-          </span>
-          <span className="text-xs font-semibold text-slate-400">
-            v2.4.0 Release
-          </span>
-        </div>
-
-        {/* Slider Card */}
-        <div className="relative z-10 my-auto max-w-lg mx-auto w-full transition-all duration-500">
-          
-          {/* Main Card */}
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 p-8 rounded-2xl shadow-2xl relative overflow-hidden">
-            {/* Slide color tint */}
-            <div className={`absolute inset-0 bg-gradient-to-tr ${activeSlide.color} opacity-40 mix-blend-color-dodge transition-all duration-700`} />
-            
-            <div className="relative z-10 space-y-6">
-              {/* Badge */}
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wide bg-white/10 text-white border border-white/10">
-                {activeSlide.badge}
-              </span>
-
-              {/* Icon & Title */}
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shadow-inner">
-                  <SlideIcon className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="text-xl font-extrabold text-white tracking-tight">
-                  {activeSlide.title}
-                </h3>
-              </div>
-
-              {/* Description */}
-              <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                {activeSlide.description}
-              </p>
-
-              {/* Interactive preview representation */}
-              <div className="pt-2 border-t border-white/10 flex items-center gap-3">
-                <div className="flex -space-x-1.5">
-                  <div className="h-5 w-5 rounded-full bg-blue-500 border border-slate-900 text-[8px] font-bold flex items-center justify-center">RM</div>
-                  <div className="h-5 w-5 rounded-full bg-emerald-500 border border-slate-900 text-[8px] font-bold flex items-center justify-center">JD</div>
-                  <div className="h-5 w-5 rounded-full bg-amber-500 border border-slate-900 text-[8px] font-bold flex items-center justify-center">AS</div>
-                </div>
-                <span className="text-[10px] text-slate-400 font-semibold">
-                  Active teammates sync live
-                </span>
-              </div>
-            </div>
           </div>
         </div>
-
-        {/* Bottom Navigation / Indicators */}
-        <div className="relative z-10 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {slides.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentSlide(idx)}
-                className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                  idx === currentSlide ? 'w-6 bg-white' : 'w-2.5 bg-white/20 hover:bg-white/45'
-                }`}
-                aria-label={`Go to slide ${idx + 1}`}
-              />
-            ))}
-          </div>
-
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-            Powered by Google Cloud & Supabase
-          </p>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
-
-

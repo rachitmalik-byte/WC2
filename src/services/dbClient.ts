@@ -100,17 +100,20 @@ class DBClient {
     return data || [];
   }
 
-  async createProfile(profile: Profile): Promise<Profile> {
+  async createProfile(profile: Omit<Profile, 'id' | 'created_at' | 'updated_at'> | Profile): Promise<Profile> {
     const client = this.getClient();
     if (!client) {
-      mockDb.profiles.push(profile);
-      mockDb.persist('profiles');
-      mockDb.notify('profiles', 'insert', profile);
-      return profile;
+      if ('id' in profile && profile.id) {
+        mockDb.profiles.push(profile as Profile);
+        mockDb.persist('profiles');
+        mockDb.notify('profiles', 'insert', profile);
+        return profile as Profile;
+      }
+      return mockDb.createProfile(profile);
     }
-    const { error } = await client.from('profiles').insert(profile);
+    const { data, error } = await client.from('profiles').insert(profile).select().single();
     if (error) throw error;
-    return profile;
+    return data || (profile as Profile);
   }
 
   async switchUser(userId: string): Promise<Profile> {

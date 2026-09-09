@@ -710,9 +710,9 @@ const MOCK_NOTIFICATIONS: Notification[] = [
 class MemoryDB {
   profiles = (() => {
     try {
-      const stored = localStorage.getItem('relayhq_profiles');
+      const stored = localStorage.getItem('wc2_profiles');
       if (stored) return JSON.parse(stored);
-      const deletedRaw = localStorage.getItem('relayhq_deleted_profiles');
+      const deletedRaw = localStorage.getItem('wc2_deleted_profiles');
       const deletedIds = deletedRaw ? JSON.parse(deletedRaw) : [];
       return MOCK_PROFILES.filter(p => !deletedIds.includes(p.id));
     } catch {
@@ -721,7 +721,7 @@ class MemoryDB {
   })();
   leads = (() => {
     try {
-      const stored = localStorage.getItem('relayhq_leads');
+      const stored = localStorage.getItem('wc2_leads');
       return stored ? JSON.parse(stored) : [...MOCK_LEADS];
     } catch {
       return [...MOCK_LEADS];
@@ -729,7 +729,7 @@ class MemoryDB {
   })();
   leadUpdates = (() => {
     try {
-      const stored = localStorage.getItem('relayhq_lead_updates');
+      const stored = localStorage.getItem('wc2_lead_updates');
       return stored ? JSON.parse(stored) : [...MOCK_LEAD_UPDATES];
     } catch {
       return [...MOCK_LEAD_UPDATES];
@@ -737,7 +737,7 @@ class MemoryDB {
   })();
   leadAttachments = (() => {
     try {
-      const stored = localStorage.getItem('relayhq_lead_attachments');
+      const stored = localStorage.getItem('wc2_lead_attachments');
       return stored ? JSON.parse(stored) : [...MOCK_LEAD_ATTACHMENTS];
     } catch {
       return [...MOCK_LEAD_ATTACHMENTS];
@@ -745,7 +745,7 @@ class MemoryDB {
   })();
   tasks = (() => {
     try {
-      const stored = localStorage.getItem('relayhq_tasks');
+      const stored = localStorage.getItem('wc2_tasks');
       return stored ? JSON.parse(stored) : [...MOCK_TASKS];
     } catch {
       return [...MOCK_TASKS];
@@ -753,7 +753,7 @@ class MemoryDB {
   })();
   reminders = (() => {
     try {
-      const stored = localStorage.getItem('relayhq_reminders');
+      const stored = localStorage.getItem('wc2_reminders');
       return stored ? JSON.parse(stored) : [...MOCK_REMINDERS];
     } catch {
       return [...MOCK_REMINDERS];
@@ -761,7 +761,7 @@ class MemoryDB {
   })();
   channels = (() => {
     try {
-      const stored = localStorage.getItem('relayhq_channels');
+      const stored = localStorage.getItem('wc2_channels');
       return stored ? JSON.parse(stored) : [...MOCK_CHANNELS];
     } catch {
       return [...MOCK_CHANNELS];
@@ -769,7 +769,7 @@ class MemoryDB {
   })();
   messages = (() => {
     try {
-      const stored = localStorage.getItem('relayhq_messages');
+      const stored = localStorage.getItem('wc2_messages');
       return stored ? JSON.parse(stored) : [...MOCK_MESSAGES];
     } catch {
       return [...MOCK_MESSAGES];
@@ -777,7 +777,7 @@ class MemoryDB {
   })();
   notifications = (() => {
     try {
-      const stored = localStorage.getItem('relayhq_notifications');
+      const stored = localStorage.getItem('wc2_notifications');
       return stored ? JSON.parse(stored) : [...MOCK_NOTIFICATIONS];
     } catch {
       return [...MOCK_NOTIFICATIONS];
@@ -786,7 +786,7 @@ class MemoryDB {
   
   personalNotes: PersonalNote[] = (() => {
     try {
-      const stored = localStorage.getItem('relayhq_personal_notes');
+      const stored = localStorage.getItem('wc2_personal_notes');
       if (stored) return JSON.parse(stored);
     } catch {}
     return [
@@ -1423,15 +1423,30 @@ class MemoryDB {
     return updated;
   }
 
+  createProfile(profileData: Omit<Profile, 'id' | 'created_at' | 'updated_at'>): Profile {
+    const newProfile: Profile = {
+      ...profileData,
+      id: `custom-${Math.random().toString(36).substr(2, 9)}`,
+      status: profileData.status || 'active',
+      presence: profileData.presence || 'online',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    this.profiles.push(newProfile);
+    this.persist('profiles');
+    this.notify('profiles', 'insert', newProfile);
+    return newProfile;
+  }
+
   hardDeleteProfile(id: string) {
     this.profiles = this.profiles.filter((p) => p.id !== id);
     this.persist('profiles');
     try {
-      const deletedRaw = localStorage.getItem('relayhq_deleted_profiles');
+      const deletedRaw = localStorage.getItem('wc2_deleted_profiles');
       const deletedIds = deletedRaw ? JSON.parse(deletedRaw) : [];
       if (!deletedIds.includes(id)) {
         deletedIds.push(id);
-        localStorage.setItem('relayhq_deleted_profiles', JSON.stringify(deletedIds));
+        localStorage.setItem('wc2_deleted_profiles', JSON.stringify(deletedIds));
       }
     } catch (e) {
       console.error(e);

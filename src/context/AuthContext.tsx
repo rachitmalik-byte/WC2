@@ -39,7 +39,7 @@ interface AuthContextType {
   switchUser: (userId: string) => Promise<void>;
   isLoading: boolean;
   isSimulator: boolean;
-  bypassAuth: () => Promise<void>;
+  bypassAuth: (userId?: string) => Promise<void>;
   signOutUser: () => Promise<void>;
   updateCurrentUserProfile: (updates: Partial<Profile>) => Promise<void>;
   isDeveloper: boolean;
@@ -624,11 +624,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const bypassAuth = async () => {
+  const bypassAuth = async (userId?: string) => {
     setIsLoading(true);
     setIsSimulator(true);
     // Switch client variables back to offline simulator
     dbClient.isSupabaseEnabled = false;
+    if (userId) {
+      await dbClient.switchUser(userId);
+    }
     await loadProfileAndTeammates();
     setIsLoading(false);
   };
