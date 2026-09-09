@@ -7,6 +7,7 @@ import { Header } from './components/layout/Header';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { DashboardView } from './views/dashboard/DashboardView';
 import { LeadsView } from './views/leads/LeadsView';
+import { ClassesView } from './views/classes/ClassesView';
 import { CreatePage } from './views/leads/CreatePage';
 import { EditPage } from './views/leads/EditPage';
 import { DetailPage } from './views/leads/DetailPage';
@@ -779,7 +780,10 @@ const MainAppContent: React.FC = () => {
     if (currentView === 'dashboard') {
       return <DashboardView onNavigate={setCurrentView} />;
     }
-    if (currentView === 'leads') {
+    if (currentView === 'classes' || currentView === 'leads') {
+      return <ClassesView onNavigate={setCurrentView} />;
+    }
+    if (currentView === 'leads-legacy') {
       return <LeadsView onNavigate={setCurrentView} />;
     }
     if (currentView === 'leads/new') {

@@ -1,6 +1,9 @@
 import { mockDb } from './mockDb';
 import { supabase } from './supabase';
-import type { Profile, Lead, LeadUpdate, LeadAttachment, Task, Reminder, Channel, Message, Notification, PersonalNote } from '../types/database';
+import type { 
+  Profile, Lead, LeadUpdate, LeadAttachment, Task, Reminder, Channel, Message, Notification, PersonalNote,
+  ProjectClass, WorkItem, ReviewRemark, AssetVersion, HandoverLog
+} from '../types/database';
 
 class DBClient {
   public isSupabaseEnabled = false;
@@ -857,23 +860,21 @@ class DBClient {
   getSupabaseConfig() {
     const envUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
     const envKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
-    const storedUrl = localStorage.getItem('relayhq_supabase_url') || '';
-    const storedKey = localStorage.getItem('relayhq_supabase_key') || '';
-    const defaultUrl = 'https://tybanzuobmksokxhpmhh.supabase.co';
-    const defaultKey = 'sb_publishable_Ut5XrxQk02pM_WlvVqZwUA_gfOOsiv0';
+    const storedUrl = localStorage.getItem('wc2_supabase_url') || '';
+    const storedKey = localStorage.getItem('wc2_supabase_key') || '';
     return {
-      url: storedUrl || envUrl || defaultUrl,
-      key: storedKey || envKey || defaultKey
+      url: storedUrl || envUrl || '',
+      key: storedKey || envKey || ''
     };
   }
 
   setSupabaseConfig(url: string, key: string) {
     if (url && key) {
-      localStorage.setItem('relayhq_supabase_url', url);
-      localStorage.setItem('relayhq_supabase_key', key);
+      localStorage.setItem('wc2_supabase_url', url);
+      localStorage.setItem('wc2_supabase_key', key);
     } else {
-      localStorage.removeItem('relayhq_supabase_url');
-      localStorage.removeItem('relayhq_supabase_key');
+      localStorage.removeItem('wc2_supabase_url');
+      localStorage.removeItem('wc2_supabase_key');
     }
     mockDb.supabaseUrl = url;
     mockDb.supabaseKey = key;
@@ -1044,6 +1045,111 @@ class DBClient {
 
     if (updateErr) throw updateErr;
     return updated;
+  }
+
+  // --- IXR & EdTech Creative Operations Methods ---
+
+  async getProjectClasses(): Promise<ProjectClass[]> {
+    const client = this.getClient();
+    if (!client) return mockDb.getProjectClasses();
+    const { data, error } = await client.from('project_classes').select('*').order('created_at', { ascending: false });
+    if (error) {
+      console.warn('Falling back to local mock classes:', error.message);
+      return mockDb.getProjectClasses();
+    }
+    return data || [];
+  }
+
+  async getProjectClassById(id: string): Promise<ProjectClass | undefined> {
+    const client = this.getClient();
+    if (!client) return mockDb.getProjectClassById(id);
+    const { data, error } = await client.from('project_classes').select('*').eq('id', id).single();
+    if (error) return mockDb.getProjectClassById(id);
+    return data;
+  }
+
+  async createProjectClass(classData: Omit<ProjectClass, 'id' | 'created_at' | 'updated_at'>): Promise<ProjectClass> {
+    const client = this.getClient();
+    if (!client) return mockDb.createProjectClass(classData);
+    const newClass = {
+      ...classData,
+      id: `class-${Math.random().toString(36).substr(2, 9)}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    const { data, error } = await client.from('project_classes').insert(newClass).select().single();
+    if (error) return mockDb.createProjectClass(classData);
+    return data;
+  }
+
+  async updateProjectClass(id: string, updates: Partial<ProjectClass>): Promise<ProjectClass> {
+    const client = this.getClient();
+    if (!client) return mockDb.updateProjectClass(id, updates);
+    const { data, error } = await client.from('project_classes').update(updates).eq('id', id).select().single();
+    if (error) return mockDb.updateProjectClass(id, updates);
+    return data;
+  }
+
+  async getWorkItems(projectId?: string): Promise<WorkItem[]> {
+    const client = this.getClient();
+    if (!client) return mockDb.getWorkItems(projectId);
+    let query = client.from('work_items').select('*, versions:asset_versions(*), remarks:review_remarks(*), handovers:handover_logs(*)');
+    if (projectId && projectId !== 'all') {
+      query = query.eq('project_id', projectId);
+    }
+    const { data, error } = await query.order('created_at', { ascending: false });
+    if (error) {
+      console.warn('Falling back to mock work items:', error.message);
+      return mockDb.getWorkItems(projectId);
+    }
+    return data || [];
+  }
+
+  async getWorkItemById(id: string): Promise<WorkItem | undefined> {
+    const client = this.getClient();
+    if (!client) return mockDb.getWorkItemById(id);
+    const { data, error } = await client
+      .from('work_items')
+      .select('*, versions:asset_versions(*), remarks:review_remarks(*), handovers:handover_logs(*)')
+      .eq('id', id)
+      .single();
+    if (error) return mockDb.getWorkItemById(id);
+    return data;
+  }
+
+  async createWorkItem(itemData: Omit<WorkItem, 'id' | 'created_at' | 'updated_at' | 'latest_version_number'>, userId: string): Promise<WorkItem> {
+    const client = this.getClient();
+    if (!client) return mockDb.createWorkItem(itemData, userId);
+    return mockDb.createWorkItem(itemData, userId);
+  }
+
+  async updateWorkItem(id: string, updates: Partial<WorkItem>, userId: string): Promise<WorkItem> {
+    const client = this.getClient();
+    if (!client) return mockDb.updateWorkItem(id, updates, userId);
+    return mockDb.updateWorkItem(id, updates, userId);
+  }
+
+  async deleteWorkItem(id: string): Promise<void> {
+    const client = this.getClient();
+    if (!client) return mockDb.deleteWorkItem(id);
+    await client.from('work_items').delete().eq('id', id);
+    mockDb.deleteWorkItem(id);
+  }
+
+  async addReviewRemark(itemId: string, remarkData: Omit<ReviewRemark, 'id' | 'created_at' | 'work_item_id'>): Promise<ReviewRemark> {
+    return mockDb.addReviewRemark(itemId, remarkData);
+  }
+
+  async updateRemarkStatus(itemId: string, remarkId: string, status: ReviewRemark['status'], userId: string, versionNumber?: number): Promise<ReviewRemark> {
+    return mockDb.updateRemarkStatus(itemId, remarkId, status, userId, versionNumber);
+  }
+
+  async uploadAssetVersion(itemId: string, versionData: Omit<AssetVersion, 'id' | 'created_at' | 'work_item_id' | 'version_number'>): Promise<AssetVersion> {
+    return mockDb.uploadAssetVersion(itemId, versionData);
+  }
+
+  async executeRoleHandoff(itemId: string, fromUserId: string, toUserId: string, briefingNotes: string, reason: string): Promise<HandoverLog> {
+    return mockDb.executeRoleHandoff(itemId, fromUserId, toUserId, briefingNotes, reason);
   }
 }
 

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { dbClient } from '../../services/dbClient';
 import {
-  LayoutDashboard, Briefcase, CheckSquare, Calendar,
-  MessageSquare, ArrowLeftRight, FileText,
+  LayoutDashboard, CheckSquare, Calendar,
+  MessageSquare, ArrowLeftRight, FileText, Layers,
   ChevronLeft, ChevronRight, Settings, LogOut, Mail, ExternalLink
 } from 'lucide-react';
 
@@ -89,22 +89,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
   }, [currentUser]);
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'leads', label: 'Projects', icon: Briefcase, badge: unreadCounts.leads > 0 ? unreadCounts.leads : undefined, isDot: true },
-    { id: 'tasks', label: 'Tasks', icon: CheckSquare, badge: unreadCounts.tasks > 0 ? unreadCounts.tasks : undefined, isDot: true },
-    { id: 'reminders', label: 'Reminders', icon: Calendar, badge: unreadCounts.reminders > 0 ? unreadCounts.reminders : undefined, isDot: true },
-    { id: 'notes', label: 'Scratchpad', icon: FileText },
-    { id: 'messaging', label: 'Messaging', icon: MessageSquare, badge: unreadCounts.messaging > 0 ? unreadCounts.messaging : undefined },
+    { id: 'dashboard', label: 'Command Center', icon: LayoutDashboard },
+    { id: 'classes', label: 'Classes & Projects', icon: Layers, badge: unreadCounts.leads > 0 ? unreadCounts.leads : undefined, isDot: true },
+    { id: 'tasks', label: 'Tasks & Queue', icon: CheckSquare, badge: unreadCounts.tasks > 0 ? unreadCounts.tasks : undefined, isDot: true },
+    { id: 'reminders', label: 'Reminders & Sync', icon: Calendar, badge: unreadCounts.reminders > 0 ? unreadCounts.reminders : undefined, isDot: true },
+    { id: 'notes', label: 'Scripts & Notes', icon: FileText },
+    { id: 'messaging', label: 'Team Threads', icon: MessageSquare, badge: unreadCounts.messaging > 0 ? unreadCounts.messaging : undefined },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   const handleNavClick = (id: string) => {
     let target = id;
-    if (id === 'leads') {
-      if (currentView.startsWith('leads/')) {
-        target = 'leads';
+    if (id === 'classes' || id === 'leads') {
+      if (currentView.startsWith('classes/')) {
+        target = 'classes';
       } else {
-        target = localStorage.getItem('relayhq_last_leads_subview') || 'leads';
+        target = localStorage.getItem('wc2_last_classes_subview') || 'classes';
       }
     }
     onNavigate(target);
@@ -112,7 +112,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const getIsActive = (id: string) => {
-    if (id === 'leads') return currentView.startsWith('leads');
+    if (id === 'classes' || id === 'leads') return currentView.startsWith('classes') || currentView.startsWith('leads');
     if (id === 'messaging') return currentView.startsWith('messaging');
     return currentView === id;
   };
@@ -338,8 +338,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 style={{ opacity: isExpanded ? 1 : 0, maxWidth: isExpanded ? '140px' : '0', transition: 'opacity 160ms ease, max-width 220ms cubic-bezier(0.4,0,0.2,1)' }}
               >
                 <p className="text-xs font-semibold text-foreground truncate leading-tight">{currentUser?.full_name}</p>
-                <p className="text-[9px] text-muted-foreground uppercase tracking-wide font-medium mt-0.5">
-                  {currentUser?.role === 'head' ? '👑 Head' : '💼 Specialist'}
+                <p className="text-[9px] text-primary/90 font-medium truncate mt-0.5">
+                  {currentUser?.designation || (currentUser?.role === 'head' ? '👑 Department Lead' : '🎬 IXR Specialist')}
                 </p>
               </div>
             </button>

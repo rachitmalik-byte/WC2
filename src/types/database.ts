@@ -1,10 +1,113 @@
-export type UserRole = 'head' | 'growth_specialist';
+export type UserRole = 
+  | 'head' 
+  | 'video_editor' 
+  | 'audio_generator' 
+  | 'quiz_generator' 
+  | 'quiz_implementer' 
+  | 'hb_reviewer' 
+  | 'video_reviewer' 
+  | 'growth_specialist';
+
 export type ProfileStatus = 'active' | 'inactive';
 export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'proposal' | 'negotiation' | 'closed_won' | 'closed_lost';
 export type LeadPriority = 'low' | 'medium' | 'high';
 export type TaskPriority = 'low' | 'medium' | 'high';
 export type TaskStatus = 'todo' | 'in_progress' | 'done';
 export type TaskType = 'personal' | 'assigned' | 'team';
+
+// IXR Creative & Content Operating System Types
+export type AssetType = 'video' | 'audio' | 'quiz' | 'handbook' | 'interactive_module';
+export type WorkItemStatus = 'backlog' | 'in_production' | 'review_in_progress' | 'approved' | 'delivered';
+export type ReviewSeverity = 'blocker' | 'correction' | 'suggestion' | 'nitpick';
+export type RemarkStatus = 'open' | 'resolved' | 'rejected' | 'in_discussion';
+
+export interface ProjectClass {
+  id: string;
+  name: string; // e.g. "Class 10 - Physics 3D Simulation"
+  code: string; // e.g. "C10-PHY"
+  category: 'Class Course' | 'Interactive Lab' | 'Quiz Bank' | 'Special Module';
+  description?: string;
+  thumbnail?: string;
+  status: 'active' | 'archived' | 'completed';
+  custom_review_stages: string[]; // e.g. ["L1: Tech Check", "L2: HB Accuracy", "L3: Quiz Sync", "L4: Final Signoff"]
+  lead_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReviewRemark {
+  id: string;
+  work_item_id: string;
+  version_number: number;
+  review_stage: string; // e.g. "L1", "L2", "L3", "L4"
+  timestamp_seconds?: number; // e.g. 84 for 01:24
+  target_ref?: string; // e.g. "Question 4", "Slide 12", "Intro VO"
+  remark_text: string;
+  severity: ReviewSeverity;
+  status: RemarkStatus;
+  author_id: string;
+  resolved_in_version?: number;
+  resolved_by?: string;
+  created_at: string;
+}
+
+export interface AssetVersion {
+  id: string;
+  work_item_id: string;
+  version_number: number;
+  preview_url?: string;
+  source_file_url?: string;
+  notes?: string;
+  uploaded_by: string;
+  created_at: string;
+}
+
+export interface HandoverLog {
+  id: string;
+  work_item_id: string;
+  from_user_id: string;
+  to_user_id: string;
+  reason: string;
+  briefing_notes: string;
+  current_version: number;
+  pending_remarks_count: number;
+  created_at: string;
+}
+
+export interface InstructionHistory {
+  id: string;
+  work_item_id: string;
+  version: number;
+  instruction_text: string;
+  change_reason?: string;
+  updated_by: string;
+  created_at: string;
+}
+
+export interface WorkItem {
+  id: string;
+  project_id: string;
+  title: string;
+  asset_type: AssetType;
+  status: WorkItemStatus;
+  priority: TaskPriority;
+  current_review_stage: string; // e.g. "L1", "L2", "L3"
+  is_parallel_review_allowed: boolean;
+  assignee_ids: string[];
+  reviewer_ids: string[];
+  deadline?: string;
+  instruction_text: string;
+  instruction_version: number;
+  drive_folder_url?: string;
+  latest_version_number: number;
+  versions?: AssetVersion[];
+  remarks?: ReviewRemark[];
+  handovers?: HandoverLog[];
+  dependencies?: string[]; // IDs of other work items this depends on
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface Profile {
   id: string;

@@ -1,7 +1,9 @@
-import type { Profile, Lead, LeadUpdate, LeadAttachment, Task, Reminder, Channel, Message, Notification, PersonalNote } from '../types/database';
+import type { 
+  Profile, Lead, LeadUpdate, LeadAttachment, Task, Reminder, Channel, Message, Notification, PersonalNote,
+  ProjectClass, WorkItem, ReviewRemark, AssetVersion, HandoverLog
+} from '../types/database';
 
-
-// Pre-populated Profiles
+// Pre-populated Profiles tailored for IXR, EdTech & Creative Production
 export const MOCK_PROFILES: Profile[] = [
   {
     id: 'ceo-1',
@@ -20,204 +22,384 @@ export const MOCK_PROFILES: Profile[] = [
     email: 'sarah.j@relayhq.com',
     role: 'head',
     status: 'active',
-    designation: 'Head of Growth',
+    designation: 'Head of IXR & Production',
     presence: 'online',
     created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
   },
   {
-    id: 'specialist-1',
+    id: 'video-ed-1',
     full_name: 'Alex Rivera',
     email: 'alex.r@relayhq.com',
-    role: 'growth_specialist',
+    role: 'video_editor',
     status: 'active',
-    designation: 'Senior Workflow Specialist',
+    designation: 'Lead Video Editor (3D & Motion)',
     presence: 'online',
     created_at: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
   },
   {
-    id: 'specialist-2',
+    id: 'audio-gen-1',
     full_name: 'Elena Rostova',
     email: 'elena.r@relayhq.com',
-    role: 'growth_specialist',
+    role: 'audio_generator',
     status: 'active',
-    designation: 'Workflow Coordinator',
+    designation: 'Audio Generator & Voiceover Artist',
     presence: 'idle',
     created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
   },
   {
-    id: 'specialist-3',
+    id: 'quiz-imp-1',
     full_name: 'Marcus Chen',
     email: 'marcus.c@relayhq.com',
-    role: 'growth_specialist',
+    role: 'quiz_implementer',
     status: 'active',
-    designation: 'Workflow Integration Lead',
+    designation: 'Quiz Implementer & Interactive Dev',
     presence: 'busy',
     created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
   },
   {
-    id: 'specialist-4',
+    id: 'quiz-gen-1',
     full_name: 'Jane Doe',
     email: 'jane.d@relayhq.com',
-    role: 'growth_specialist',
-    status: 'inactive',
-    designation: 'Workflow Specialist',
-    presence: 'offline',
-    created_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+    role: 'quiz_generator',
+    status: 'active',
+    designation: 'Subject SME & Quiz Generator',
+    presence: 'online',
+    created_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
   },
   {
-    id: 'specialist-5',
+    id: 'hb-rev-1',
     full_name: 'Arjab Jain',
-    email: 'arjab.jain@englivo.com',
-    role: 'head',
+    email: 'arjab.jain@vaidikedu.com',
+    role: 'hb_reviewer',
     status: 'active',
-    designation: 'Outbound Growth Lead',
+    designation: 'Handbook (HB) & Pedagogy Reviewer',
     presence: 'online',
     created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
   },
   {
-    id: 'specialist-6',
+    id: 'vid-rev-1',
     full_name: 'Rachit Malik',
     email: 'rachit.malik@vaidikedu.com',
-    role: 'head',
+    role: 'video_reviewer',
     status: 'active',
-    designation: 'Technical Integration Lead',
+    designation: 'Technical Video Reviewer (L1/L2 Lead)',
     presence: 'online',
     created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
   }
 ];
 
-// Realistic Pre-populated Leads
+// IXR & EdTech Class Projects
+export const MOCK_CLASSES: ProjectClass[] = [
+  {
+    id: 'class-1',
+    name: 'Class 10 - Physics 3D Interactive Lab',
+    code: 'C10-PHY',
+    category: 'Class Course',
+    description: '3D simulation assets, interactive optics quizzes, and conceptual video lectures.',
+    status: 'active',
+    custom_review_stages: ['L1: Tech Audio/Video', 'L2: HB Accuracy', 'L3: Quiz Logic', 'L4: Final Executive Signoff'],
+    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'class-2',
+    name: 'Class 8 - Chemistry Molecules & Bonding',
+    code: 'C8-CHEM',
+    category: 'Interactive Lab',
+    description: 'Animated electron orbits, molecular bonding puzzles, and voiceover walkthroughs.',
+    status: 'active',
+    custom_review_stages: ['L1: Tech Audio/Video', 'L2: HB Accuracy', 'L3: Quiz Logic', 'L4: Final Executive Signoff'],
+    created_at: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'class-3',
+    name: 'Class 12 - Advanced Biology Genetics & DNA',
+    code: 'C12-BIO',
+    category: 'Class Course',
+    description: 'Microscopic 3D rendering of DNA replication, transcription quizzes, and lab experiments.',
+    status: 'active',
+    custom_review_stages: ['L1: Tech Audio/Video', 'L2: HB Accuracy', 'L3: Quiz Logic', 'L4: Final Executive Signoff'],
+    created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'class-4',
+    name: 'Interactive Math Explorations: 3D Calculus',
+    code: 'MATH-3D',
+    category: 'Special Module',
+    description: 'Graph visualization, dynamic curves, and step-by-step interactive problem sets.',
+    status: 'active',
+    custom_review_stages: ['L1: Tech Audio/Video', 'L2: HB Accuracy', 'L3: Quiz Logic', 'L4: Final Executive Signoff'],
+    created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+  }
+];
+
+// Realistic IXR Work Items across Video, Audio, Quiz, and Handbook
+export const MOCK_WORK_ITEMS: WorkItem[] = [
+  {
+    id: 'item-1',
+    project_id: 'class-1',
+    title: 'Optics: Refraction & Snell\'s Law 3D Animation',
+    asset_type: 'video',
+    status: 'review_in_progress',
+    priority: 'high',
+    current_review_stage: 'L2',
+    is_parallel_review_allowed: true,
+    assignee_ids: ['video-ed-1'],
+    reviewer_ids: ['vid-rev-1', 'hb-rev-1'],
+    deadline: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+    instruction_text: 'Animate laser beam traveling through glass prism. Emphasize normal angle theta-1 and theta-2. Ensure refractive index formula n1*sin(th1) = n2*sin(th2) is clearly highlighted.',
+    instruction_version: 2,
+    drive_folder_url: 'https://drive.google.com/drive/folders/ixr-optics-demo',
+    latest_version_number: 2,
+    created_by: 'head-1',
+    created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    versions: [
+      {
+        id: 'ver-1-1',
+        work_item_id: 'item-1',
+        version_number: 1,
+        preview_url: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&auto=format&fit=crop&q=60',
+        source_file_url: 'https://drive.google.com/file/d/optics_v1_blend',
+        notes: 'Initial draft render at 1080p 60fps with basic lighting.',
+        uploaded_by: 'video-ed-1',
+        created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'ver-1-2',
+        work_item_id: 'item-1',
+        version_number: 2,
+        preview_url: 'https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=800&auto=format&fit=crop&q=60',
+        source_file_url: 'https://drive.google.com/file/d/optics_v2_blend',
+        notes: 'Fixed laser beam glow intensity and synced audio cues at 01:24.',
+        uploaded_by: 'video-ed-1',
+        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      }
+    ],
+    remarks: [
+      {
+        id: 'rem-1',
+        work_item_id: 'item-1',
+        version_number: 1,
+        review_stage: 'L1',
+        timestamp_seconds: 45,
+        target_ref: 'Prism entry point',
+        remark_text: 'Laser light beam flickers when intersecting the outer boundary. Fix the normal angle reflection.',
+        severity: 'correction',
+        status: 'resolved',
+        author_id: 'vid-rev-1',
+        resolved_in_version: 2,
+        resolved_by: 'video-ed-1',
+        created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'rem-2',
+        work_item_id: 'item-1',
+        version_number: 2,
+        review_stage: 'L2',
+        timestamp_seconds: 84,
+        target_ref: 'Snell formula card',
+        remark_text: 'HB Review: The subscript for glass refractive index should say n_glass instead of n2 to avoid confusion for 10th graders.',
+        severity: 'blocker',
+        status: 'open',
+        author_id: 'hb-rev-1',
+        created_at: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'rem-3',
+        work_item_id: 'item-1',
+        version_number: 2,
+        review_stage: 'L3',
+        timestamp_seconds: 110,
+        target_ref: 'Interactive quiz callout',
+        remark_text: 'Parallel review note: Ensure pause marker triggers exactly at 01:50 before quiz #1 begins.',
+        severity: 'suggestion',
+        status: 'open',
+        author_id: 'quiz-imp-1',
+        created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
+      }
+    ],
+    handovers: [
+      {
+        id: 'ho-1',
+        work_item_id: 'item-1',
+        from_user_id: 'video-ed-1',
+        to_user_id: 'video-ed-1',
+        reason: 'Editor check-in',
+        briefing_notes: 'All textures mapped. Waiting on HB reviewer signoff on the n_glass formula subscript.',
+        current_version: 2,
+        pending_remarks_count: 2,
+        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ]
+  },
+  {
+    id: 'item-2',
+    project_id: 'class-1',
+    title: 'Snell\'s Law Explainer Voiceover Track',
+    asset_type: 'audio',
+    status: 'approved',
+    priority: 'medium',
+    current_review_stage: 'L4',
+    is_parallel_review_allowed: false,
+    assignee_ids: ['audio-gen-1'],
+    reviewer_ids: ['hb-rev-1', 'head-1'],
+    deadline: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    instruction_text: 'Tone should be energetic and clear. Pronounce Snell with emphasis. Match pauses at 00:45 and 01:24.',
+    instruction_version: 1,
+    drive_folder_url: 'https://drive.google.com/drive/folders/ixr-audio-snell',
+    latest_version_number: 1,
+    created_by: 'head-1',
+    created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    versions: [
+      {
+        id: 'ver-2-1',
+        work_item_id: 'item-2',
+        version_number: 1,
+        preview_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+        source_file_url: 'https://drive.google.com/file/d/snell_master_wav',
+        notes: 'Final master audio track with de-essing and studio compression.',
+        uploaded_by: 'audio-gen-1',
+        created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ],
+    remarks: []
+  },
+  {
+    id: 'item-3',
+    project_id: 'class-1',
+    title: 'Optics Quiz Set: 5 Interactive Multi-Step Questions',
+    asset_type: 'quiz',
+    status: 'in_production',
+    priority: 'high',
+    current_review_stage: 'L1',
+    is_parallel_review_allowed: true,
+    assignee_ids: ['quiz-imp-1', 'quiz-gen-1'],
+    reviewer_ids: ['hb-rev-1'],
+    deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    instruction_text: 'Create 5 questions testing critical angle and refractive index calculation. Question 3 must include interactive slider for angle of incidence from 0 to 90 degrees.',
+    instruction_version: 1,
+    drive_folder_url: 'https://drive.google.com/drive/folders/ixr-optics-quizzes',
+    latest_version_number: 1,
+    created_by: 'head-1',
+    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+    dependencies: ['item-1'],
+    versions: [
+      {
+        id: 'ver-3-1',
+        work_item_id: 'item-3',
+        version_number: 1,
+        preview_url: 'https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?w=800&auto=format&fit=crop&q=60',
+        source_file_url: 'https://github.com/vaidik/quiz-optics-json',
+        notes: 'Branching logic completed. Tested on desktop and iPad viewport.',
+        uploaded_by: 'quiz-imp-1',
+        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ],
+    remarks: [
+      {
+        id: 'rem-301',
+        work_item_id: 'item-3',
+        version_number: 1,
+        review_stage: 'L1',
+        target_ref: 'Question 3 slider',
+        remark_text: 'Slider steps should increment by 1 degree, currently jumping by 5 degrees.',
+        severity: 'correction',
+        status: 'open',
+        author_id: 'vid-rev-1',
+        created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+      }
+    ]
+  },
+  {
+    id: 'item-4',
+    project_id: 'class-2',
+    title: 'Covalent vs Ionic Bonding 3D Molecular Simulation',
+    asset_type: 'interactive_module',
+    status: 'review_in_progress',
+    priority: 'high',
+    current_review_stage: 'L3',
+    is_parallel_review_allowed: true,
+    assignee_ids: ['video-ed-1', 'quiz-imp-1'],
+    reviewer_ids: ['hb-rev-1', 'head-1'],
+    deadline: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
+    instruction_text: 'Student drags electron from Sodium (Na) to Chlorine (Cl) to form NaCl crystal lattice. Show electrostatic attraction vectors.',
+    instruction_version: 1,
+    drive_folder_url: 'https://drive.google.com/drive/folders/ixr-chem-bonding',
+    latest_version_number: 1,
+    created_by: 'head-1',
+    created_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
+    versions: [
+      {
+        id: 'ver-4-1',
+        work_item_id: 'item-4',
+        version_number: 1,
+        preview_url: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&auto=format&fit=crop&q=60',
+        source_file_url: 'https://drive.google.com/file/d/chem_nacl_sim',
+        notes: '3D electron transfer physics baked into WebGL container.',
+        uploaded_by: 'video-ed-1',
+        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ],
+    remarks: [
+      {
+        id: 'rem-401',
+        work_item_id: 'item-4',
+        version_number: 1,
+        review_stage: 'L2',
+        target_ref: 'Electron cloud',
+        remark_text: 'Handbook note: The sodium ion radius should shrink after electron donation. Add visual scale animation.',
+        severity: 'blocker',
+        status: 'open',
+        author_id: 'hb-rev-1',
+        created_at: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString()
+      }
+    ]
+  }
+];
+
+// Realistic Pre-populated Leads (kept for backward-compatible fallback)
 const MOCK_LEADS: Lead[] = [
   {
     id: 'lead-1',
-    company_name: 'Acme Corp',
-    prospect_name: 'John Smith',
-    email: 'john.smith@acme.com',
-    phone: '+1 (555) 019-2834',
-    linkedin: 'linkedin.com/in/john-smith-acme',
-    website: 'acme.com',
-    company_type: 'Enterprise',
-    industry: 'Software & Technology',
-    service_needed: 'Outbound Campaign Strategy',
-    service_offered: 'Scale Plan',
+    company_name: 'Class 10 Physics 3D Simulation',
+    prospect_name: 'Optics & Light Module',
+    email: 'physics-curriculum@vaidikedu.com',
     status: 'qualified',
     priority: 'high',
-    notes: 'Very interested in outbound scaling. Budget approved for Q3.',
-    tags: ['enterprise', 'high-intent', 'tech'],
-    created_by: 'specialist-1',
+    notes: 'In active review. Video cut v2 in L2 review with HB reviewer.',
+    tags: ['Class 10', 'Physics', '3D Lab'],
+    created_by: 'head-1',
     created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    assigned_users: ['specialist-1']
+    assigned_users: ['video-ed-1', 'vid-rev-1', 'hb-rev-1']
   },
   {
     id: 'lead-2',
-    company_name: 'Stark Industries',
-    prospect_name: 'Pepper Potts',
-    email: 'pepper@stark.com',
-    phone: '+1 (555) 777-8888',
-    linkedin: 'linkedin.com/in/pepper-potts-stark',
-    website: 'starkindustries.com',
-    company_type: 'Conglomerate',
-    industry: 'Defense & Aerospace',
-    service_needed: 'Lead Qualification Support',
-    service_offered: 'Custom Growth Retainer',
+    company_name: 'Class 8 Chemistry Experiments',
+    prospect_name: 'Molecular Bonding & Salt Crystals',
+    email: 'chem-team@vaidikedu.com',
     status: 'proposal',
     priority: 'high',
-    notes: 'Negotiating custom contract. Wants a dedicated account executive.',
-    tags: ['conglomerate', 'vip', 'custom'],
-    created_by: 'specialist-1',
+    notes: 'Review level L3. Voiceover track approved, waiting for electron cloud scaling fix.',
+    tags: ['Class 8', 'Chemistry', 'Interactive'],
+    created_by: 'head-1',
     created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    assigned_users: ['specialist-1', 'head-1']
-  },
-  {
-    id: 'lead-3',
-    company_name: 'Nova Media',
-    prospect_name: 'Alice Johnson',
-    email: 'alice@novamedia.co',
-    phone: '+1 (555) 321-4567',
-    linkedin: 'linkedin.com/in/alice-j-nova',
-    website: 'novamedia.co',
-    company_type: 'Agency',
-    industry: 'Marketing & Advertising',
-    service_needed: 'B2B Lead Generation',
-    service_offered: 'Growth Pilot',
-    status: 'new',
-    priority: 'medium',
-    notes: 'Inbound request. Replied to newsletter campaign.',
-    tags: ['agency', 'inbound'],
-    created_by: 'specialist-2',
-    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    assigned_users: ['specialist-2']
-  },
-  {
-    id: 'lead-4',
-    company_name: 'Aether Logistics',
-    prospect_name: 'Bob Miller',
-    email: 'bob@aetherlogistics.com',
-    phone: '+1 (555) 987-6543',
-    linkedin: 'linkedin.com/in/bob-miller-aether',
-    website: 'aetherlogistics.com',
-    company_type: 'Mid-Market',
-    industry: 'Transportation & Logistics',
-    service_needed: 'Cold Outreach Pipeline Set up',
-    service_offered: 'Scale Plan',
-    status: 'contacted',
-    priority: 'low',
-    notes: 'Cold email call booked. Prefers email followups.',
-    tags: ['logistics', 'cold-outreach'],
-    created_by: 'specialist-2',
-    created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    assigned_users: ['specialist-2']
-  },
-  {
-    id: 'lead-5',
-    company_name: 'Zenith Labs',
-    prospect_name: 'Claire Zhang',
-    email: 'claire@zenithlabs.io',
-    phone: '+1 (555) 456-7890',
-    linkedin: 'linkedin.com/in/claire-z-zenith',
-    website: 'zenithlabs.io',
-    company_type: 'Startup',
-    industry: 'Healthcare & Biotech',
-    service_needed: 'Growth Consulting',
-    service_offered: 'Consulting Retainer',
-    status: 'negotiation',
-    priority: 'high',
-    notes: 'Final contract stage. Checking references.',
-    tags: ['biotech', 'startup', 'high-priority'],
-    created_by: 'specialist-3',
-    created_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    assigned_users: ['specialist-3']
-  },
-  {
-    id: 'lead-6',
-    company_name: 'Pixel Perfect',
-    prospect_name: 'David Wright',
-    email: 'david@pixelperfect.design',
-    website: 'pixelperfect.design',
-    company_type: 'Agency',
-    industry: 'Design & Creative',
-    service_needed: 'Outbound Playbook Development',
-    service_offered: 'Growth Pilot',
-    status: 'closed_won',
-    priority: 'medium',
-    notes: 'Contract signed! Pilot starts next week.',
-    tags: ['won', 'design'],
-    created_by: 'specialist-3',
-    created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    assigned_users: ['specialist-3']
+    assigned_users: ['video-ed-1', 'quiz-imp-1', 'hb-rev-1']
   }
 ];
 
@@ -630,18 +812,38 @@ class MemoryDB {
     ];
   })();
 
+  projectClasses: ProjectClass[] = (() => {
+    try {
+      const stored = localStorage.getItem('wc2_project_classes');
+      return stored ? JSON.parse(stored) : [...MOCK_CLASSES];
+    } catch {
+      return [...MOCK_CLASSES];
+    }
+  })();
+
+  workItems: WorkItem[] = (() => {
+    try {
+      const stored = localStorage.getItem('wc2_work_items');
+      return stored ? JSON.parse(stored) : [...MOCK_WORK_ITEMS];
+    } catch {
+      return [...MOCK_WORK_ITEMS];
+    }
+  })();
+
   persist(table: string) {
     try {
-      if (table === 'profiles') localStorage.setItem('relayhq_profiles', JSON.stringify(this.profiles));
-      if (table === 'leads') localStorage.setItem('relayhq_leads', JSON.stringify(this.leads));
-      if (table === 'lead_updates') localStorage.setItem('relayhq_lead_updates', JSON.stringify(this.leadUpdates));
-      if (table === 'lead_attachments') localStorage.setItem('relayhq_lead_attachments', JSON.stringify(this.leadAttachments));
-      if (table === 'tasks') localStorage.setItem('relayhq_tasks', JSON.stringify(this.tasks));
-      if (table === 'reminders') localStorage.setItem('relayhq_reminders', JSON.stringify(this.reminders));
-      if (table === 'channels') localStorage.setItem('relayhq_channels', JSON.stringify(this.channels));
-      if (table === 'messages') localStorage.setItem('relayhq_messages', JSON.stringify(this.messages));
-      if (table === 'notifications') localStorage.setItem('relayhq_notifications', JSON.stringify(this.notifications));
-      if (table === 'personal_notes') localStorage.setItem('relayhq_personal_notes', JSON.stringify(this.personalNotes));
+      if (table === 'profiles') localStorage.setItem('wc2_profiles', JSON.stringify(this.profiles));
+      if (table === 'project_classes') localStorage.setItem('wc2_project_classes', JSON.stringify(this.projectClasses));
+      if (table === 'work_items') localStorage.setItem('wc2_work_items', JSON.stringify(this.workItems));
+      if (table === 'leads') localStorage.setItem('wc2_leads', JSON.stringify(this.leads));
+      if (table === 'lead_updates') localStorage.setItem('wc2_lead_updates', JSON.stringify(this.leadUpdates));
+      if (table === 'lead_attachments') localStorage.setItem('wc2_lead_attachments', JSON.stringify(this.leadAttachments));
+      if (table === 'tasks') localStorage.setItem('wc2_tasks', JSON.stringify(this.tasks));
+      if (table === 'reminders') localStorage.setItem('wc2_reminders', JSON.stringify(this.reminders));
+      if (table === 'channels') localStorage.setItem('wc2_channels', JSON.stringify(this.channels));
+      if (table === 'messages') localStorage.setItem('wc2_messages', JSON.stringify(this.messages));
+      if (table === 'notifications') localStorage.setItem('wc2_notifications', JSON.stringify(this.notifications));
+      if (table === 'personal_notes') localStorage.setItem('wc2_personal_notes', JSON.stringify(this.personalNotes));
     } catch (e) {
       console.error('Error persisting table ' + table + ' to localStorage:', e);
     }
@@ -1373,6 +1575,296 @@ class MemoryDB {
       }
     });
     this.notify('messages', 'update_all', { channelId, receiverId });
+  }
+
+  // --- IXR & EdTech Creative Operations Methods ---
+
+  getProjectClasses(): ProjectClass[] {
+    return [...this.projectClasses];
+  }
+
+  getProjectClassById(id: string): ProjectClass | undefined {
+    return this.projectClasses.find(p => p.id === id);
+  }
+
+  createProjectClass(data: Omit<ProjectClass, 'id' | 'created_at' | 'updated_at'>): ProjectClass {
+    const newClass: ProjectClass = {
+      ...data,
+      id: `class-${Math.random().toString(36).substr(2, 9)}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    this.projectClasses.unshift(newClass);
+    this.persist('project_classes');
+    this.notify('project_classes', 'insert', newClass);
+    return newClass;
+  }
+
+  updateProjectClass(id: string, updates: Partial<ProjectClass>): ProjectClass {
+    const idx = this.projectClasses.findIndex(c => c.id === id);
+    if (idx === -1) throw new Error('Class/Project not found');
+    const updated = {
+      ...this.projectClasses[idx],
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
+    this.projectClasses[idx] = updated;
+    this.persist('project_classes');
+    this.notify('project_classes', 'update', updated);
+    return updated;
+  }
+
+  getWorkItems(projectId?: string): WorkItem[] {
+    if (projectId && projectId !== 'all') {
+      return this.workItems.filter(item => item.project_id === projectId);
+    }
+    return [...this.workItems];
+  }
+
+  getWorkItemById(id: string): WorkItem | undefined {
+    return this.workItems.find(item => item.id === id);
+  }
+
+  createWorkItem(data: Omit<WorkItem, 'id' | 'created_at' | 'updated_at' | 'latest_version_number'>, userId: string): WorkItem {
+    const newItem: WorkItem = {
+      ...data,
+      id: `item-${Math.random().toString(36).substr(2, 9)}`,
+      latest_version_number: 1,
+      versions: [
+        {
+          id: `ver-${Math.random().toString(36).substr(2, 9)}`,
+          work_item_id: '',
+          version_number: 1,
+          notes: 'Initial work item created.',
+          uploaded_by: userId,
+          created_at: new Date().toISOString()
+        }
+      ],
+      remarks: [],
+      handovers: [],
+      created_by: userId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    newItem.versions![0].work_item_id = newItem.id;
+    this.workItems.unshift(newItem);
+    this.persist('work_items');
+    this.notify('work_items', 'insert', newItem);
+
+    // Notify assignees
+    newItem.assignee_ids.forEach(uid => {
+      if (uid !== userId) {
+        this.createNotification(
+          uid,
+          'assignment_alert',
+          'Assigned to IXR Asset',
+          `You have been assigned to ${newItem.title} (${newItem.asset_type.toUpperCase()}).`,
+          `/items/${newItem.id}`
+        );
+      }
+    });
+
+    return newItem;
+  }
+
+  updateWorkItem(id: string, updates: Partial<WorkItem>, userId: string): WorkItem {
+    const idx = this.workItems.findIndex(i => i.id === id);
+    if (idx === -1) throw new Error('Work item not found');
+    const current = this.workItems[idx];
+    const prevAssignees = current.assignee_ids || [];
+
+    const updated: WorkItem = {
+      ...current,
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
+    this.workItems[idx] = updated;
+    this.persist('work_items');
+    this.notify('work_items', 'update', updated);
+
+    // If new assignees were added
+    if (updates.assignee_ids) {
+      const added = updates.assignee_ids.filter(u => !prevAssignees.includes(u));
+      added.forEach(uid => {
+        if (uid !== userId) {
+          this.createNotification(
+            uid,
+            'assignment_alert',
+            'Assigned to IXR Asset',
+            `You have been assigned to ${updated.title}`,
+            `/items/${updated.id}`
+          );
+        }
+      });
+    }
+
+    return updated;
+  }
+
+  deleteWorkItem(id: string): void {
+    const idx = this.workItems.findIndex(i => i.id === id);
+    if (idx === -1) throw new Error('Work item not found');
+    this.workItems.splice(idx, 1);
+    this.persist('work_items');
+    this.notify('work_items', 'delete', { id });
+  }
+
+  // Multi-tier review remark operations (Frame.io style)
+  addReviewRemark(
+    itemId: string,
+    remarkData: Omit<ReviewRemark, 'id' | 'created_at' | 'work_item_id'>
+  ): ReviewRemark {
+    const idx = this.workItems.findIndex(i => i.id === itemId);
+    if (idx === -1) throw new Error('Work item not found');
+
+    const newRemark: ReviewRemark = {
+      ...remarkData,
+      id: `rem-${Math.random().toString(36).substr(2, 9)}`,
+      work_item_id: itemId,
+      created_at: new Date().toISOString()
+    };
+
+    const item = this.workItems[idx];
+    const remarks = item.remarks ? [...item.remarks] : [];
+    remarks.push(newRemark);
+    item.remarks = remarks;
+    item.updated_at = new Date().toISOString();
+    this.persist('work_items');
+    this.notify('work_items', 'update', item);
+
+    // Notify item assignees about review feedback
+    item.assignee_ids.forEach(uid => {
+      if (uid !== remarkData.author_id) {
+        this.createNotification(
+          uid,
+          'task_update',
+          `New ${remarkData.review_stage} Review Remark`,
+          `[${remarkData.severity.toUpperCase()}] ${remarkData.remark_text.slice(0, 70)}...`,
+          `/items/${itemId}`
+        );
+      }
+    });
+
+    return newRemark;
+  }
+
+  updateRemarkStatus(
+    itemId: string,
+    remarkId: string,
+    status: ReviewRemark['status'],
+    userId: string,
+    versionNumber?: number
+  ): ReviewRemark {
+    const idx = this.workItems.findIndex(i => i.id === itemId);
+    if (idx === -1) throw new Error('Work item not found');
+
+    const item = this.workItems[idx];
+    const rIdx = (item.remarks || []).findIndex(r => r.id === remarkId);
+    if (rIdx === -1) throw new Error('Remark not found');
+
+    item.remarks![rIdx].status = status;
+    if (status === 'resolved') {
+      item.remarks![rIdx].resolved_by = userId;
+      if (versionNumber) {
+        item.remarks![rIdx].resolved_in_version = versionNumber;
+      }
+    }
+    item.updated_at = new Date().toISOString();
+    this.persist('work_items');
+    this.notify('work_items', 'update', item);
+    return item.remarks![rIdx];
+  }
+
+  // Upload new version (v2, v3...)
+  uploadAssetVersion(
+    itemId: string,
+    versionData: Omit<AssetVersion, 'id' | 'created_at' | 'work_item_id' | 'version_number'>
+  ): AssetVersion {
+    const idx = this.workItems.findIndex(i => i.id === itemId);
+    if (idx === -1) throw new Error('Work item not found');
+
+    const item = this.workItems[idx];
+    const nextVerNum = (item.latest_version_number || 1) + 1;
+
+    const newVer: AssetVersion = {
+      ...versionData,
+      id: `ver-${Math.random().toString(36).substr(2, 9)}`,
+      work_item_id: itemId,
+      version_number: nextVerNum,
+      created_at: new Date().toISOString()
+    };
+
+    item.versions = [...(item.versions || []), newVer];
+    item.latest_version_number = nextVerNum;
+    item.status = 'review_in_progress';
+    item.updated_at = new Date().toISOString();
+
+    this.persist('work_items');
+    this.notify('work_items', 'update', item);
+
+    // Notify reviewers
+    (item.reviewer_ids || []).forEach(uid => {
+      this.createNotification(
+        uid,
+        'task_update',
+        `Version v${nextVerNum} Uploaded`,
+        `${item.title} has a new draft ready for review.`,
+        `/items/${itemId}`
+      );
+    });
+
+    return newVer;
+  }
+
+  // 1-Click Role Handoff Logger
+  executeRoleHandoff(
+    itemId: string,
+    fromUserId: string,
+    toUserId: string,
+    briefingNotes: string,
+    reason: string
+  ): HandoverLog {
+    const idx = this.workItems.findIndex(i => i.id === itemId);
+    if (idx === -1) throw new Error('Work item not found');
+
+    const item = this.workItems[idx];
+    const openRemarks = (item.remarks || []).filter(r => r.status === 'open').length;
+
+    const handover: HandoverLog = {
+      id: `ho-${Math.random().toString(36).substr(2, 9)}`,
+      work_item_id: itemId,
+      from_user_id: fromUserId,
+      to_user_id: toUserId,
+      reason,
+      briefing_notes: briefingNotes,
+      current_version: item.latest_version_number,
+      pending_remarks_count: openRemarks,
+      created_at: new Date().toISOString()
+    };
+
+    item.handovers = [handover, ...(item.handovers || [])];
+    
+    // Update assignees
+    const currentAssignees = item.assignee_ids.filter(id => id !== fromUserId);
+    if (!currentAssignees.includes(toUserId)) {
+      currentAssignees.push(toUserId);
+    }
+    item.assignee_ids = currentAssignees;
+    item.updated_at = new Date().toISOString();
+
+    this.persist('work_items');
+    this.notify('work_items', 'update', item);
+
+    // Notify incoming teammate
+    this.createNotification(
+      toUserId,
+      'assignment_alert',
+      '🤝 Handover: You received an asset',
+      `Briefing: ${briefingNotes.slice(0, 80)}... (${openRemarks} pending remarks)`,
+      `/items/${itemId}`
+    );
+
+    return handover;
   }
 }
 

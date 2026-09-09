@@ -5,7 +5,7 @@ import type { Lead, Task, Reminder } from '../../types/database';
 import {
   Briefcase, CheckSquare, Calendar, Activity, ChevronRight, Mail, ExternalLink,
   GripVertical, EyeOff, Layout, RefreshCw, TrendingUp, DollarSign, Clock,
-  Award, UserCheck, Users
+  Award, UserCheck, Users, Layers, Sparkles, AlertCircle, CheckCircle2
 } from 'lucide-react';
 
 interface DashboardViewProps {
@@ -87,6 +87,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
     setWidgetWidths(savedWidths ? JSON.parse(savedWidths) : defaultWidths);
   }, [currentUser]);
 
+  const [workItems, setWorkItems] = useState<any[]>([]);
+  const [projectClasses, setProjectClasses] = useState<any[]>([]);
+
   const fetchDashboardData = async () => {
     if (!currentUser) return;
     const leadsData = await dbClient.getLeads();
@@ -97,6 +100,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
 
     const remindersData = await dbClient.getReminders();
     setReminders(remindersData);
+
+    try {
+      const cls = await dbClient.getProjectClasses();
+      setProjectClasses(cls);
+      const items = await dbClient.getWorkItems();
+      setWorkItems(items);
+    } catch (e) {
+      console.warn('Failed to load IXR items:', e);
+    }
 
     // Pull recent activity logs
     try {
@@ -681,59 +693,68 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
   };
 
   const renderHeadMetrics = () => {
-    const totalLeads = leads.length;
-    const wonLeads = leads.filter((l) => l.status === 'closed_won').length;
-    const conversionRate = totalLeads ? Math.round((wonLeads / totalLeads) * 100) : 0;
-
-    const totalTasks = tasks.length;
-    const completedTasks = tasks.filter((t) => t.status === 'done').length;
-    const taskCompletionRate = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
-    const activeReminders = reminders.filter((r) => r.status === 'active').length;
+    const totalClasses = projectClasses.length;
+    const totalItems = workItems.length;
+    const inReviewCount = workItems.filter(i => i.status === 'review_in_progress').length;
+    const approvedCount = workItems.filter(i => i.status === 'approved').length;
+    const openRemarksCount = workItems.reduce((acc, item) => {
+      return acc + (item.remarks || []).filter((r: any) => r.status === 'open').length;
+    }, 0);
 
     return (
       <div className={`space-y-2 ${isConfiguring ? 'border border-dashed border-primary/40 p-3 rounded-xl bg-card/50' : ''}`}>
         {isConfiguring && (
           <div className="flex items-center justify-between text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-2 border-b border-border/40 pb-1.5">
-            <span>Director Metrics Row</span>
+            <span>Production Pipeline Overview</span>
           </div>
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="border border-border bg-card p-4 rounded-xl shadow-sm">
+          <div 
+            onClick={() => onNavigate('classes')}
+            className="border border-border bg-card p-4 rounded-xl shadow-sm hover:border-primary/50 transition cursor-pointer"
+          >
             <div className="flex items-center justify-between text-muted-foreground mb-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider">Total Sales Leads</span>
-              <Briefcase className="h-4 w-4 text-primary" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Active Classes & Batches</span>
+              <Layers className="h-4 w-4 text-primary" />
             </div>
-            <p className="text-2xl font-bold text-foreground">{totalLeads}</p>
-            <p className="text-[10px] text-muted-foreground mt-1">Across all growth specialist portfolios</p>
+            <p className="text-2xl font-bold text-foreground">{totalClasses}</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Class 8, 10, 12 curriculum labs</p>
           </div>
 
-          <div className="border border-border bg-card p-4 rounded-xl shadow-sm">
+          <div 
+            onClick={() => onNavigate('classes')}
+            className="border border-border bg-card p-4 rounded-xl shadow-sm hover:border-primary/50 transition cursor-pointer"
+          >
             <div className="flex items-center justify-between text-muted-foreground mb-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider">Won Conversion Ratio</span>
-              <Award className="h-4 w-4 text-success animate-pulse" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">In Review (L1–L4 Tiers)</span>
+              <Sparkles className="h-4 w-4 text-purple-500 animate-pulse" />
             </div>
-            <p className="text-2xl font-bold text-foreground">{conversionRate}%</p>
-            <div className="w-full bg-muted h-1 rounded mt-2 overflow-hidden">
-              <div className="bg-success h-full" style={{ width: `${conversionRate}%` }} />
-            </div>
+            <p className="text-2xl font-bold text-foreground">{inReviewCount}</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Pending editor/HB signoffs</p>
           </div>
 
-          <div className="border border-border bg-card p-4 rounded-xl shadow-sm">
+          <div 
+            onClick={() => onNavigate('classes')}
+            className="border border-border bg-card p-4 rounded-xl shadow-sm hover:border-primary/50 transition cursor-pointer"
+          >
             <div className="flex items-center justify-between text-muted-foreground mb-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider">Task Completion</span>
-              <CheckSquare className="h-4 w-4 text-warning" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Open Review Remarks</span>
+              <AlertCircle className="h-4 w-4 text-red-500" />
             </div>
-            <p className="text-2xl font-bold text-foreground">{taskCompletionRate}%</p>
-            <p className="text-[10px] text-muted-foreground mt-1">{completedTasks} of {totalTasks} checklist items done</p>
+            <p className="text-2xl font-bold text-foreground">{openRemarksCount}</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Timestamped corrections logged</p>
           </div>
 
-          <div className="border border-border bg-card p-4 rounded-xl shadow-sm">
+          <div 
+            onClick={() => onNavigate('classes')}
+            className="border border-border bg-card p-4 rounded-xl shadow-sm hover:border-primary/50 transition cursor-pointer"
+          >
             <div className="flex items-center justify-between text-muted-foreground mb-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider">Active Reminders</span>
-              <Calendar className="h-4 w-4 text-danger" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Approved & Ready</span>
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
             </div>
-            <p className="text-2xl font-bold text-foreground">{activeReminders}</p>
-            <p className="text-[10px] text-muted-foreground mt-1">Calendar alarms scheduled</p>
+            <p className="text-2xl font-bold text-foreground">{approvedCount}</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Of {totalItems} total media assets</p>
           </div>
         </div>
       </div>

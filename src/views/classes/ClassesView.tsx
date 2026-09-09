@@ -1,0 +1,817 @@
+import React, { useState, useEffect } from 'react';
+import type { ProjectClass, WorkItem, AssetType, WorkItemStatus } from '../../types/database';
+import { dbClient } from '../../services/dbClient';
+import { useAuth } from '../../context/AuthContext';
+import { ReviewDrawer } from '../../components/ui/ReviewDrawer';
+import {
+  Layers, Table, Kanban, Plus, Search, Video, Mic, CheckSquare,
+  FileText, ExternalLink
+} from 'lucide-react';
+
+interface ClassesViewProps {
+  onNavigate?: (view: string) => void;
+}
+
+export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigate }) => {
+  const { currentUser, profiles } = useAuth();
+
+  const [classes, setClasses] = useState<ProjectClass[]>([]);
+  const [selectedClassId, setSelectedClassId] = useState<string>('all');
+  const [workItems, setWorkItems] = useState<WorkItem[]>([]);
+  const [viewMode, setViewMode] = useState<'excel' | 'kanban'>('excel');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [assetTypeFilter, setAssetTypeFilter] = useState<string>('all');
+  const [roleQueueFilter, setRoleQueueFilter] = useState<string>('all');
+  const [reviewStageFilter, setReviewStageFilter] = useState<string>('all');
+
+  // Selected item for Frame.io style Review Drawer
+  const [activeReviewItem, setActiveReviewItem] = useState<WorkItem | null>(null);
+
+  // New Work Item Modal
+  const [isCreatingItem, setIsCreatingItem] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newAssetType, setNewAssetType] = useState<AssetType>('video');
+  const [newClassId, setNewClassId] = useState('');
+  const [newInstructions, setNewInstructions] = useState('');
+  const [newAssigneeId, setNewAssigneeId] = useState('');
+  const [newReviewerId, setNewReviewerId] = useState('');
+  const [newDriveUrl, setNewDriveUrl] = useState('');
+
+  // New Class Project Modal
+  const [isCreatingClass, setIsCreatingClass] = useState(false);
+  const [newClassName, setNewClassName] = useState('');
+  const [newClassCode, setNewClassCode] = useState('');
+  const [newClassCategory, setNewClassCategory] = useState<ProjectClass['category']>('Class Course');
+  const [newClassDesc, setNewClassDesc] = useState('');
+
+  // Load classes and work items
+  const loadData = async () => {
+    try {
+      const cls = await dbClient.getProjectClasses();
+      setClasses(cls);
+      if (cls.length > 0 && !newClassId) {
+        setNewClassId(cls[0].id);
+      }
+
+      const items = await dbClient.getWorkItems(selectedClassId);
+      setWorkItems(items);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+    const unsub = dbClient.subscribe((table) => {
+      if (table === 'work_items' || table === 'project_classes') {
+        loadData();
+      }
+    });
+    return () => unsub();
+  }, [selectedClassId]);
+
+  const getProfileName = (id: string) => {
+    return profiles.find(p => p.id === id)?.full_name || 'Unassigned';
+  };
+
+  // Filter items
+  const filteredItems = workItems.filter(item => {
+    if (selectedClassId !== 'all' && item.project_id !== selectedClassId) return false;
+    if (assetTypeFilter !== 'all' && item.asset_type !== assetTypeFilter) return false;
+    if (reviewStageFilter !== 'all' && !item.current_review_stage?.includes(reviewStageFilter)) return false;
+
+    // Role Queue Filter (e.g. show items assigned to video editors or audio creators)
+    if (roleQueueFilter === 'my_work') {
+      if (!currentUser || !item.assignee_ids?.includes(currentUser.id)) return false;
+    } else if (roleQueueFilter === 'my_reviews') {
+      if (!currentUser || !item.reviewer_ids?.includes(currentUser.id)) return false;
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      return (
+        item.title.toLowerCase().includes(q) ||
+        item.instruction_text.toLowerCase().includes(q) ||
+        item.asset_type.toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
+
+  // Handle Quick Create Work Item
+  const handleCreateWorkItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim() || !currentUser || !newClassId) return;
+
+    try {
+      await dbClient.createWorkItem({
+        project_id: newClassId,
+        title: newTitle.trim(),
+        asset_type: newAssetType,
+        status: 'in_production',
+        priority: 'high',
+        current_review_stage: 'L1',
+        is_parallel_review_allowed: true,
+        assignee_ids: newAssigneeId ? [newAssigneeId] : [currentUser.id],
+        reviewer_ids: newReviewerId ? [newReviewerId] : [],
+        instruction_text: newInstructions.trim(),
+        instruction_version: 1,
+        drive_folder_url: newDriveUrl.trim() || undefined,
+        created_by: currentUser.id
+      }, currentUser.id);
+
+      setIsCreatingItem(false);
+      setNewTitle('');
+      setNewInstructions('');
+      setNewDriveUrl('');
+      loadData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Handle Create Class
+  const handleCreateClass = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newClassName.trim()) return;
+
+    try {
+      const created = await dbClient.createProjectClass({
+        name: newClassName.trim(),
+        code: newClassCode.trim() || 'NEW-MOD',
+        category: newClassCategory,
+        description: newClassDesc.trim(),
+        status: 'active',
+        custom_review_stages: ['L1: Tech Audio/Video', 'L2: HB Accuracy', 'L3: Quiz Logic', 'L4: Final Executive Signoff']
+      });
+
+      setIsCreatingClass(false);
+      setNewClassName('');
+      setNewClassCode('');
+      setNewClassDesc('');
+      setSelectedClassId(created.id);
+      loadData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Inline table field update (Excel-speed editing)
+  const handleInlineStatusChange = async (itemId: string, status: WorkItemStatus) => {
+    try {
+      await dbClient.updateWorkItem(itemId, { status }, currentUser?.id || '');
+      setWorkItems(prev => prev.map(i => i.id === itemId ? { ...i, status } : i));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleInlineStageChange = async (itemId: string, current_review_stage: string) => {
+    try {
+      await dbClient.updateWorkItem(itemId, { current_review_stage }, currentUser?.id || '');
+      setWorkItems(prev => prev.map(i => i.id === itemId ? { ...i, current_review_stage } : i));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const getAssetIcon = (type: AssetType) => {
+    switch (type) {
+      case 'video': return <Video className="h-3.5 w-3.5 text-blue-500" />;
+      case 'audio': return <Mic className="h-3.5 w-3.5 text-purple-500" />;
+      case 'quiz': return <CheckSquare className="h-3.5 w-3.5 text-emerald-500" />;
+      default: return <FileText className="h-3.5 w-3.5 text-amber-500" />;
+    }
+  };
+
+  const kanbanColumns: { status: WorkItemStatus; label: string; color: string }[] = [
+    { status: 'backlog', label: 'Backlog & Scripts', color: 'border-slate-500/30' },
+    { status: 'in_production', label: 'In Production (Editors/Audio)', color: 'border-blue-500/30' },
+    { status: 'review_in_progress', label: 'Review Rounds (L1–L4)', color: 'border-amber-500/30' },
+    { status: 'approved', label: 'Approved & Signed Off', color: 'border-emerald-500/30' },
+    { status: 'delivered', label: 'Published to Class', color: 'border-purple-500/30' },
+  ];
+
+  return (
+    <div className="flex-1 flex flex-col h-full bg-background overflow-hidden">
+      
+      {/* Top Action Header */}
+      <div className="p-4 md:p-6 border-b border-border bg-card/50 backdrop-blur shrink-0 space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="p-2 rounded-xl bg-primary/10 text-primary">
+                <Layers className="h-5 w-5" />
+              </span>
+              <div>
+                <h1 className="text-xl font-bold text-foreground tracking-tight">Classes & Production Assets</h1>
+                <p className="text-xs text-muted-foreground">
+                  IXR & EdTech workflow engine: Multi-tier reviews (L1–L4), Frame.io feedback, and dynamic handoffs.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Action Buttons */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* View Switcher: Excel Table vs Jira Kanban */}
+            <div className="flex items-center bg-muted/60 p-1 rounded-xl border border-border">
+              <button
+                onClick={() => setViewMode('excel')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                  viewMode === 'excel'
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Table className="h-3.5 w-3.5" />
+                Spreadsheet (Excel)
+              </button>
+              <button
+                onClick={() => setViewMode('kanban')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                  viewMode === 'kanban'
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Kanban className="h-3.5 w-3.5" />
+                Pipeline (Jira)
+              </button>
+            </div>
+
+            <button
+              onClick={() => setIsCreatingClass(true)}
+              className="px-3 py-1.5 rounded-xl border border-border bg-card text-foreground hover:bg-muted text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+            >
+              <Plus className="h-3.5 w-3.5" /> New Class / Project
+            </button>
+
+            <button
+              onClick={() => setIsCreatingItem(true)}
+              className="px-3.5 py-1.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+            >
+              <Plus className="h-4 w-4" /> Add Asset / Task
+            </button>
+          </div>
+        </div>
+
+        {/* Filter Toolbar */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5 pt-1 text-xs">
+          
+          {/* Class / Subject Selector */}
+          <div className="relative">
+            <select
+              value={selectedClassId}
+              onChange={(e) => setSelectedClassId(e.target.value)}
+              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-medium focus:outline-none focus:border-primary cursor-pointer text-xs"
+            >
+              <option value="all">📚 All Classes & Batches ({classes.length})</option>
+              {classes.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.code} · {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Search bar */}
+          <div className="relative">
+            <Search className="h-3.5 w-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search assets, instructions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-card border border-border rounded-xl pl-8 pr-3 py-2 text-foreground text-xs focus:outline-none focus:border-primary"
+            />
+          </div>
+
+          {/* Asset Type Filter */}
+          <div>
+            <select
+              value={assetTypeFilter}
+              onChange={(e) => setAssetTypeFilter(e.target.value)}
+              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-medium focus:outline-none focus:border-primary cursor-pointer text-xs"
+            >
+              <option value="all">🎨 All Asset Types</option>
+              <option value="video">🎬 Videos / 3D Animation</option>
+              <option value="audio">🎙️ Voiceover / Audio Tracks</option>
+              <option value="quiz">📝 Interactive Quizzes</option>
+              <option value="interactive_module">🧪 Interactive Labs</option>
+            </select>
+          </div>
+
+          {/* Review Tier Filter */}
+          <div>
+            <select
+              value={reviewStageFilter}
+              onChange={(e) => setReviewStageFilter(e.target.value)}
+              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-medium focus:outline-none focus:border-primary cursor-pointer text-xs"
+            >
+              <option value="all">🔍 All Review Tiers</option>
+              <option value="L1">L1: Tech Audio/Video</option>
+              <option value="L2">L2: Handbook Accuracy</option>
+              <option value="L3">L3: Quiz Logic</option>
+              <option value="L4">L4: Final Signoff</option>
+            </select>
+          </div>
+
+          {/* My Role / Queue Filter */}
+          <div>
+            <select
+              value={roleQueueFilter}
+              onChange={(e) => setRoleQueueFilter(e.target.value)}
+              className="w-full bg-card border border-border rounded-xl px-3 py-2 text-foreground font-medium focus:outline-none focus:border-primary cursor-pointer text-xs"
+            >
+              <option value="all">👥 Full Team Queue</option>
+              <option value="my_work">💼 Assigned to Me</option>
+              <option value="my_reviews">🎯 Pending My Review</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Viewport: Excel Table or Jira Kanban */}
+      <div className="flex-1 overflow-auto p-4 md:p-6">
+        
+        {/* MODE 1: EXCEL SPREADSHEET (Speed, Inline Editing, Frame.io Trigger) */}
+        {viewMode === 'excel' && (
+          <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-muted/40 border-b border-border text-muted-foreground font-semibold">
+                    <th className="p-3 w-12 text-center">#</th>
+                    <th className="p-3 min-w-[240px]">Work Item / Asset Title</th>
+                    <th className="p-3 w-32">Type</th>
+                    <th className="p-3 w-36">Status</th>
+                    <th className="p-3 w-36">Review Tier</th>
+                    <th className="p-3 w-28">Version</th>
+                    <th className="p-3 w-40">Assignees</th>
+                    <th className="p-3 w-40">Reviewers</th>
+                    <th className="p-3 w-28 text-center">Open Remarks</th>
+                    <th className="p-3 w-28 text-right">Review Hub</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60 font-sans">
+                  {filteredItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={10} className="p-8 text-center text-muted-foreground">
+                        No assets found matching the selected filters. Click "Add Asset" to start tracking.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredItems.map((item, idx) => {
+                      const openRemarks = (item.remarks || []).filter(r => r.status === 'open').length;
+                      return (
+                        <tr
+                          key={item.id}
+                          className="hover:bg-muted/30 transition-colors group"
+                        >
+                          <td className="p-3 text-center text-muted-foreground font-mono">
+                            {idx + 1}
+                          </td>
+
+                          {/* Title & Drive Link */}
+                          <td className="p-3">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => setActiveReviewItem(item)}
+                                className="font-semibold text-foreground hover:text-primary transition-colors text-left truncate max-w-xs cursor-pointer"
+                              >
+                                {item.title}
+                              </button>
+                              {item.drive_folder_url && (
+                                <a
+                                  href={item.drive_folder_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  title="Open Drive Folder"
+                                  className="text-muted-foreground hover:text-primary transition-colors shrink-0"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-muted-foreground truncate max-w-sm mt-0.5">
+                              {item.instruction_text}
+                            </p>
+                          </td>
+
+                          {/* Type */}
+                          <td className="p-3">
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted border border-border text-[11px] font-medium capitalize">
+                              {getAssetIcon(item.asset_type)}
+                              {item.asset_type.replace(/_/g, ' ')}
+                            </span>
+                          </td>
+
+                          {/* Inline Status Dropdown */}
+                          <td className="p-3">
+                            <select
+                              value={item.status}
+                              onChange={(e) => handleInlineStatusChange(item.id, e.target.value as any)}
+                              className={`text-[11px] font-bold px-2 py-1 rounded-lg border focus:outline-none cursor-pointer ${
+                                item.status === 'approved'
+                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                                  : item.status === 'review_in_progress'
+                                  ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+                                  : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+                              }`}
+                            >
+                              <option value="backlog">Backlog</option>
+                              <option value="in_production">In Production</option>
+                              <option value="review_in_progress">Review In Progress</option>
+                              <option value="approved">Approved</option>
+                              <option value="delivered">Delivered</option>
+                            </select>
+                          </td>
+
+                          {/* Inline Review Tier Dropdown */}
+                          <td className="p-3">
+                            <select
+                              value={item.current_review_stage}
+                              onChange={(e) => handleInlineStageChange(item.id, e.target.value)}
+                              className="text-[11px] font-medium bg-muted/60 border border-border rounded-lg px-2 py-1 text-foreground focus:outline-none cursor-pointer"
+                            >
+                              <option value="L1">L1: Tech Check</option>
+                              <option value="L2">L2: HB Accuracy</option>
+                              <option value="L3">L3: Quiz Logic</option>
+                              <option value="L4">L4: Final Signoff</option>
+                            </select>
+                          </td>
+
+                          {/* Latest Version */}
+                          <td className="p-3">
+                            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                              v{item.latest_version_number || 1}
+                            </span>
+                          </td>
+
+                          {/* Assignees */}
+                          <td className="p-3">
+                            <div className="flex items-center gap-1">
+                              {(item.assignee_ids || []).slice(0, 2).map((uid) => (
+                                <span
+                                  key={uid}
+                                  title={getProfileName(uid)}
+                                  className="h-6 w-6 rounded-full bg-primary/15 text-primary font-bold text-[10px] flex items-center justify-center border border-border"
+                                >
+                                  {getProfileName(uid).slice(0, 2).toUpperCase()}
+                                </span>
+                              ))}
+                              <span className="text-[11px] text-muted-foreground truncate">
+                                {getProfileName(item.assignee_ids[0])}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Reviewers */}
+                          <td className="p-3">
+                            <div className="flex items-center gap-1">
+                              {(item.reviewer_ids || []).map((uid) => (
+                                <span
+                                  key={uid}
+                                  title={getProfileName(uid)}
+                                  className="h-6 w-6 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 font-bold text-[10px] flex items-center justify-center border border-border"
+                                >
+                                  {getProfileName(uid).slice(0, 2).toUpperCase()}
+                                </span>
+                              ))}
+                              {(!item.reviewer_ids || item.reviewer_ids.length === 0) && (
+                                <span className="text-[10px] text-muted-foreground">None</span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Open Remarks Badge */}
+                          <td className="p-3 text-center">
+                            {openRemarks > 0 ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-500 border border-red-500/20">
+                                🚨 {openRemarks} Open
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                ✓ Clean
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Action Button */}
+                          <td className="p-3 text-right">
+                            <button
+                              onClick={() => setActiveReviewItem(item)}
+                              className="px-2.5 py-1 bg-primary text-primary-foreground rounded-lg font-semibold text-[11px] hover:bg-primary/90 transition shadow-sm cursor-pointer"
+                            >
+                              Open Hub
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* MODE 2: JIRA KANBAN PIPELINE */}
+        {viewMode === 'kanban' && (
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 h-full min-h-[600px]">
+            {kanbanColumns.map(col => {
+              const colItems = filteredItems.filter(i => i.status === col.status);
+              return (
+                <div
+                  key={col.status}
+                  className="bg-card/40 border border-border rounded-2xl p-3 flex flex-col min-h-[400px]"
+                >
+                  <div className="flex items-center justify-between pb-3 border-b border-border mb-3">
+                    <h3 className="text-xs font-bold text-foreground truncate pr-2">{col.label}</h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                      {colItems.length}
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 flex-1 overflow-y-auto">
+                    {colItems.map(item => {
+                      const openRemarks = (item.remarks || []).filter(r => r.status === 'open').length;
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => setActiveReviewItem(item)}
+                          className="p-3.5 bg-card border border-border rounded-xl shadow-xs hover:shadow-md hover:border-primary/50 transition cursor-pointer space-y-2 group"
+                        >
+                          <div className="flex items-center justify-between text-[10px]">
+                            <span className="flex items-center gap-1 text-muted-foreground font-medium uppercase">
+                              {getAssetIcon(item.asset_type)} {item.asset_type}
+                            </span>
+                            <span className="font-mono font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                              v{item.latest_version_number}
+                            </span>
+                          </div>
+
+                          <h4 className="text-xs font-bold text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
+                            {item.title}
+                          </h4>
+
+                          <p className="text-[11px] text-muted-foreground line-clamp-2">
+                            {item.instruction_text}
+                          </p>
+
+                          <div className="pt-2 border-t border-border/50 flex items-center justify-between text-[10px]">
+                            <span className="text-primary font-semibold">
+                              Tier: {item.current_review_stage}
+                            </span>
+
+                            {openRemarks > 0 ? (
+                              <span className="text-red-500 font-bold">
+                                {openRemarks} remarks
+                              </span>
+                            ) : (
+                              <span className="text-emerald-500 font-medium">✓ Clean</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Frame.io Style Asset Review Drawer Modal */}
+      {activeReviewItem && (
+        <ReviewDrawer
+          item={activeReviewItem}
+          onClose={() => setActiveReviewItem(null)}
+          onItemUpdated={(updated) => {
+            setActiveReviewItem(updated);
+            setWorkItems(prev => prev.map(i => i.id === updated.id ? updated : i));
+          }}
+        />
+      )}
+
+      {/* Quick Add Asset Modal */}
+      {isCreatingItem && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-2xl animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                <Plus className="h-4 w-4 text-primary" /> Create New Production Asset
+              </h3>
+              <button
+                onClick={() => setIsCreatingItem(false)}
+                className="text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateWorkItem} className="space-y-3 text-xs">
+              <div>
+                <label className="font-semibold text-muted-foreground mb-1 block">Class / Module</label>
+                <select
+                  value={newClassId}
+                  onChange={(e) => setNewClassId(e.target.value)}
+                  className="w-full bg-muted border border-border rounded-lg p-2 text-foreground cursor-pointer"
+                >
+                  {classes.map(c => (
+                    <option key={c.id} value={c.id}>{c.code} · {c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="font-semibold text-muted-foreground mb-1 block">Asset Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Optics 3D Refraction Simulation"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  className="w-full bg-muted border border-border rounded-lg p-2 text-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-semibold text-muted-foreground mb-1 block">Asset Type</label>
+                  <select
+                    value={newAssetType}
+                    onChange={(e) => setNewAssetType(e.target.value as any)}
+                    className="w-full bg-muted border border-border rounded-lg p-2 text-foreground cursor-pointer"
+                  >
+                    <option value="video">Video / 3D Animation</option>
+                    <option value="audio">Voiceover / Audio</option>
+                    <option value="quiz">Interactive Quiz</option>
+                    <option value="interactive_module">Interactive Module</option>
+                    <option value="handbook">Handbook Document</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-semibold text-muted-foreground mb-1 block">Lead Assignee</label>
+                  <select
+                    value={newAssigneeId}
+                    onChange={(e) => setNewAssigneeId(e.target.value)}
+                    className="w-full bg-muted border border-border rounded-lg p-2 text-foreground cursor-pointer"
+                  >
+                    <option value="">Select Assignee...</option>
+                    {profiles.map(p => (
+                      <option key={p.id} value={p.id}>{p.full_name} ({p.designation || p.role})</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="font-semibold text-muted-foreground mb-1 block">Primary Reviewer</label>
+                <select
+                  value={newReviewerId}
+                  onChange={(e) => setNewReviewerId(e.target.value)}
+                  className="w-full bg-muted border border-border rounded-lg p-2 text-foreground cursor-pointer"
+                >
+                  <option value="">Select Reviewer (HB / Tech / Video)...</option>
+                  {profiles.map(p => (
+                    <option key={p.id} value={p.id}>{p.full_name} ({p.designation || p.role})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="font-semibold text-muted-foreground mb-1 block">Google Drive / Assets URL</label>
+                <input
+                  type="url"
+                  placeholder="https://drive.google.com/..."
+                  value={newDriveUrl}
+                  onChange={(e) => setNewDriveUrl(e.target.value)}
+                  className="w-full bg-muted border border-border rounded-lg p-2 text-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold text-muted-foreground mb-1 block">Production Instructions & Brief</label>
+                <textarea
+                  rows={3}
+                  placeholder="Specific requirements, formulas, storyboard timings, or audio cues..."
+                  value={newInstructions}
+                  onChange={(e) => setNewInstructions(e.target.value)}
+                  className="w-full bg-muted border border-border rounded-lg p-2 text-foreground focus:outline-none focus:border-primary resize-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => setIsCreatingItem(false)}
+                  className="px-3 py-1.5 rounded-lg border border-border hover:bg-muted font-medium cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 cursor-pointer"
+                >
+                  Create Asset
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* New Class Modal */}
+      {isCreatingClass && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                <Layers className="h-4 w-4 text-primary" /> Create New Class or Batch
+              </h3>
+              <button
+                onClick={() => setIsCreatingClass(false)}
+                className="text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateClass} className="space-y-3 text-xs">
+              <div>
+                <label className="font-semibold text-muted-foreground mb-1 block">Class / Module Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Class 11 - Wave Optics & Interference"
+                  value={newClassName}
+                  onChange={(e) => setNewClassName(e.target.value)}
+                  className="w-full bg-muted border border-border rounded-lg p-2 text-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-semibold text-muted-foreground mb-1 block">Code / Identifier</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. C11-OPT"
+                    value={newClassCode}
+                    onChange={(e) => setNewClassCode(e.target.value)}
+                    className="w-full bg-muted border border-border rounded-lg p-2 text-foreground focus:outline-none focus:border-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold text-muted-foreground mb-1 block">Category</label>
+                  <select
+                    value={newClassCategory}
+                    onChange={(e) => setNewClassCategory(e.target.value as any)}
+                    className="w-full bg-muted border border-border rounded-lg p-2 text-foreground cursor-pointer"
+                  >
+                    <option value="Class Course">Class Course</option>
+                    <option value="Interactive Lab">Interactive Lab</option>
+                    <option value="Quiz Bank">Quiz Bank</option>
+                    <option value="Special Module">Special Module</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="font-semibold text-muted-foreground mb-1 block">Description</label>
+                <textarea
+                  rows={2}
+                  placeholder="Brief description of the curriculum module..."
+                  value={newClassDesc}
+                  onChange={(e) => setNewClassDesc(e.target.value)}
+                  className="w-full bg-muted border border-border rounded-lg p-2 text-foreground focus:outline-none focus:border-primary resize-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => setIsCreatingClass(false)}
+                  className="px-3 py-1.5 rounded-lg border border-border hover:bg-muted font-medium cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 cursor-pointer"
+                >
+                  Create Class
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
