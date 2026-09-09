@@ -1,0 +1,1263 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@300;400;600&family=Outfit:wght@300;400;600;800&family=Lora:ital,wght@0,400;0,600;1,400&family=Space+Grotesk:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;600&family=Poppins:wght@300;400;600&family=Roboto:wght@300;400;700&family=Open+Sans:wght@300;400;600&family=Merriweather:ital,wght@0,300;0,400;1,300&family=Pacifico&family=Lobster&family=Great+Vibes&family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,400&family=Oswald:wght@400;700&family=Playpen+Sans:wght@400;700&family=Raleway:wght@300;400;700&family=Ubuntu:wght@400;700&family=Quicksand:wght@400;700&family=Dancing+Script:wght@400;700&family=Kanit:wght@300;400;700&family=Caveat:wght@400;700&family=Anton&display=swap');
+
+@theme {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  
+  --color-success: hsl(var(--success));
+  --color-warning: hsl(var(--warning));
+  --color-danger: hsl(var(--danger));
+  
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-chat-bubble-out: hsl(var(--chat-bubble-out));
+  --color-chat-bubble-out-foreground: hsl(var(--chat-bubble-out-foreground));
+  --color-chat-bubble-in: hsl(var(--chat-bubble-in));
+  --color-chat-bubble-in-foreground: hsl(var(--chat-bubble-in-foreground));
+
+  --animate-fade-in: fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slide-up: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slide-up {
+    from { transform: translateY(8px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+}
+
+@layer base {
+  /* ==================== FONT PRESETS ==================== */
+  html[data-font="inter"] { --font-sans: 'Inter', sans-serif; }
+  html[data-font="outfit"] { --font-sans: 'Outfit', sans-serif; }
+  html[data-font="space-grotesk"] { --font-sans: 'Space Grotesk', sans-serif; }
+  html[data-font="lora"] { --font-sans: 'Lora', serif; }
+  html[data-font="jetbrains-mono"] { --font-sans: 'JetBrains Mono', monospace; }
+
+  /* ==================== 1. CORPORATE (Default) ==================== */
+  html[data-theme-preset="corporate"] {
+    --background: 210 40% 98%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --success: 162.2 75.6% 41%;
+    --warning: 37.7 92.1% 50.2%;
+    --danger: 348.3 84.5% 60.2%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    
+    --radius-card: 0.5rem;
+    --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.08);
+    --shadow-card-hover: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+    --transform-card-hover: translateY(-2px);
+    --border-card: 1px solid hsl(var(--border));
+    --blur-card: none;
+    --card-opacity: 1;
+    --svg-stroke: 2px;
+
+    /* Bubbles */
+    --chat-bubble-out: 221.2 83.2% 53.3%;
+    --chat-bubble-out-foreground: 210 40% 98%;
+    --chat-bubble-in: 210 40% 96.1%;
+    --chat-bubble-in-foreground: 222.2 84% 4.9%;
+  }
+  html[data-theme-preset="corporate"].dark {
+    --background: 222.2 47.4% 11.2%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 47.4% 8%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 47.4% 8%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.15), 0 2px 4px -2px rgba(0, 0, 0, 0.15);
+    --shadow-card-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.25);
+
+    /* Bubbles */
+    --chat-bubble-out: 217.2 91.2% 59.8%;
+    --chat-bubble-out-foreground: 222.2 47.4% 11.2%;
+    --chat-bubble-in: 217.2 32.6% 17.5%;
+    --chat-bubble-in-foreground: 210 40% 98%;
+  }
+
+  /* ==================== 2. GLASSMORPHISM ==================== */
+  html[data-theme-preset="glassmorphism"] {
+    --background: 260 20% 96%;
+    --foreground: 224 71.4% 4.1%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 262.1 30% 20%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 262 30% 92%;
+    --muted-foreground: 262 15% 45%;
+    --accent: 262 30% 93%;
+    --accent-foreground: 262.1 83.3% 57.8%;
+    --success: 150 80% 38%;
+    --warning: 35 90% 50%;
+    --danger: 0 85% 60%;
+    --border: 262 30% 88%;
+    --input: 262 30% 88%;
+    --ring: 262.1 83.3% 57.8%;
+    
+    --radius-card: 1.5rem;
+    --shadow-card: 0 8px 32px 0 rgba(142, 68, 173, 0.05);
+    --shadow-card-hover: 0 20px 40px 0 rgba(142, 68, 173, 0.15), 0 8px 16px 0 rgba(0, 0, 0, 0.03);
+    --transform-card-hover: translateY(-4px) scale(1.01);
+    --border-card: 1px solid rgba(255, 255, 255, 0.6);
+    --blur-card: blur(20px);
+    --card-opacity: 0.65;
+    --svg-stroke: 2px;
+
+    /* Bubbles */
+    --chat-bubble-out: 262.1 83.3% 57.8%;
+    --chat-bubble-out-foreground: 0 0% 100%;
+    --chat-bubble-in: 262 30% 92% / 0.5;
+    --chat-bubble-in-foreground: 224 71.4% 4.1%;
+  }
+  html[data-theme-preset="glassmorphism"].dark {
+    --background: 260 25% 6%;
+    --foreground: 0 0% 98%;
+    --card: 260 25% 10%;
+    --card-foreground: 0 0% 98%;
+    --popover: 260 25% 9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 263.4 80% 62%;
+    --primary-foreground: 260 25% 6%;
+    --secondary: 260 25% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 260 20% 15%;
+    --muted-foreground: 260 10% 70%;
+    --accent: 260 20% 16%;
+    --accent-foreground: 263.4 80% 62%;
+    --border: 260 20% 16%;
+    --input: 260 20% 16%;
+    --ring: 263.4 80% 62%;
+    
+    --shadow-card: 0 12px 32px 0 rgba(0, 0, 0, 0.35);
+    --shadow-card-hover: 0 24px 50px 0 rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    --border-card: 1px solid rgba(255, 255, 255, 0.08);
+    --blur-card: blur(24px);
+    --card-opacity: 0.45;
+
+    /* Bubbles */
+    --chat-bubble-out: 263.4 80% 62%;
+    --chat-bubble-out-foreground: 260 25% 6%;
+    --chat-bubble-in: 260 20% 15% / 0.5;
+    --chat-bubble-in-foreground: 0 0% 98%;
+  }
+
+  /* ==================== 3. NEOBRUTALIST ==================== */
+  html[data-theme-preset="neobrutalist"] {
+    --background: 43 100% 97%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 48 96% 53%; /* Neo Brutalist Yellow */
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 0%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 43 20% 90%;
+    --muted-foreground: 0 0% 25%;
+    --accent: 198 90% 75%; /* Neo Blue */
+    --accent-foreground: 0 0% 0%;
+    --success: 142 70% 45%;
+    --warning: 32 95% 50%;
+    --danger: 350 85% 55%;
+    --border: 0 0% 0%;
+    --input: 0 0% 0%;
+    --ring: 0 0% 0%;
+    
+    --radius-card: 0px;
+    --shadow-card: 6px 6px 0px 0px #000000;
+    --shadow-card-hover: 10px 10px 0px 0px #000000;
+    --transform-card-hover: translate(-4px, -4px);
+    --border-card: 3px solid #000000;
+    --blur-card: none;
+    --card-opacity: 1;
+    --svg-stroke: 2.5px;
+
+    /* Bubbles */
+    --chat-bubble-out: 48 96% 53%;
+    --chat-bubble-out-foreground: 0 0% 0%;
+    --chat-bubble-in: 0 0% 100%;
+    --chat-bubble-in-foreground: 0 0% 0%;
+  }
+  html[data-theme-preset="neobrutalist"].dark {
+    --background: 0 0% 6%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 11%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 25 100% 60%; /* Orange glow */
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 100%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 75%;
+    --accent: 180 100% 40%; /* Neon Cyan */
+    --accent-foreground: 0 0% 0%;
+    --border: 0 0% 100%;
+    --input: 0 0% 100%;
+    --ring: 0 0% 100%;
+    
+    --shadow-card: 6px 6px 0px 0px #ffffff;
+    --shadow-card-hover: 10px 10px 0px 0px #ffffff;
+    --border-card: 3px solid #ffffff;
+
+    /* Bubbles */
+    --chat-bubble-out: 25 100% 60%;
+    --chat-bubble-out-foreground: 0 0% 0%;
+    --chat-bubble-in: 0 0% 15%;
+    --chat-bubble-in-foreground: 0 0% 100%;
+  }
+
+  /* ==================== 4. MINIMALIST ==================== */
+  html[data-theme-preset="minimalist"] {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 4%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 5.9% 90%;
+    --secondary-foreground: 240 10% 4%;
+    --muted: 240 5.9% 96%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 240 5.9% 95%;
+    --accent-foreground: 240 10% 4%;
+    --success: 160 84% 35%;
+    --warning: 40 80% 45%;
+    --danger: 350 80% 50%;
+    --border: 240 5.9% 92%;
+    --input: 240 5.9% 92%;
+    --ring: 240 5.9% 10%;
+    
+    --radius-card: 0px;
+    --shadow-card: none;
+    --shadow-card-hover: none;
+    --transform-card-hover: none;
+    --border-card: 1px solid hsl(var(--border));
+    --blur-card: none;
+    --card-opacity: 1;
+    --svg-stroke: 1.5px;
+
+    /* Bubbles */
+    --chat-bubble-out: 240 5.9% 10%;
+    --chat-bubble-out-foreground: 0 0% 98%;
+    --chat-bubble-in: 240 5.9% 96%;
+    --chat-bubble-in-foreground: 240 10% 4%;
+  }
+  html[data-theme-preset="minimalist"].dark {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 6%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 5%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 10% 4%;
+    --secondary: 240 5.9% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 5.9% 12%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 240 5.9% 14%;
+    --accent-foreground: 0 0% 98%;
+    --border: 240 5.9% 16%;
+    --input: 240 5.9% 16%;
+    --ring: 0 0% 98%;
+
+    /* Bubbles */
+    --chat-bubble-out: 0 0% 98%;
+    --chat-bubble-out-foreground: 240 10% 4%;
+    --chat-bubble-in: 240 5.9% 12%;
+    --chat-bubble-in-foreground: 0 0% 98%;
+  }
+
+  /* ==================== 5. RETRO-FUTURISTIC ==================== */
+  html[data-theme-preset="retrofuturistic"] {
+    --background: 330 20% 97%;
+    --foreground: 330 60% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 330 60% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 330 60% 12%;
+    --primary: 325 85% 48%; /* Neon Pink Chime */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 190 90% 30%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 330 20% 92%;
+    --muted-foreground: 330 25% 45%;
+    --accent: 190 85% 94%;
+    --accent-foreground: 190 95% 35%;
+    --success: 145 75% 35%;
+    --warning: 35 90% 45%;
+    --danger: 345 85% 50%;
+    --border: 330 20% 88%;
+    --input: 330 20% 88%;
+    --ring: 325 85% 48%;
+    
+    --radius-card: 2px;
+    --shadow-card: 0 0 10px rgba(244, 3, 140, 0.08);
+    --shadow-card-hover: 0 0 20px rgba(244, 3, 140, 0.35);
+    --transform-card-hover: translateY(-2px);
+    --border-card: 1.5px solid #f4038c;
+    --blur-card: none;
+    --card-opacity: 1;
+    --svg-stroke: 2px;
+
+    /* Bubbles */
+    --chat-bubble-out: 325 85% 48%;
+    --chat-bubble-out-foreground: 0 0% 100%;
+    --chat-bubble-in: 330 20% 92%;
+    --chat-bubble-in-foreground: 330 60% 12%;
+  }
+  html[data-theme-preset="retrofuturistic"].dark {
+    --background: 275 45% 6%;
+    --foreground: 300 30% 96%;
+    --card: 275 45% 10%;
+    --card-foreground: 300 30% 96%;
+    --popover: 275 45% 9%;
+    --popover-foreground: 300 30% 96%;
+    --primary: 320 100% 60%; /* Glowing Magenta */
+    --primary-foreground: 275 45% 5%;
+    --secondary: 185 100% 50%; /* Glowing Cyan */
+    --secondary-foreground: 275 45% 5%;
+    --muted: 275 30% 16%;
+    --muted-foreground: 275 10% 70%;
+    --accent: 275 30% 18%;
+    --accent-foreground: 320 100% 60%;
+    --border: 290 80% 28%; /* Glowing Violet border */
+    --input: 290 80% 28%;
+    --ring: 320 100% 60%;
+    
+    --shadow-card: 0 0 14px rgba(244, 3, 140, 0.22);
+    --shadow-card-hover: 0 0 24px rgba(244, 3, 140, 0.55), 0 0 8px rgba(185, 100, 50, 0.2);
+    --border-card: 1.5px solid hsl(var(--border));
+
+    /* Bubbles */
+    --chat-bubble-out: 320 100% 60%;
+    --chat-bubble-out-foreground: 275 45% 5%;
+    --chat-bubble-in: 275 30% 16%;
+    --chat-bubble-in-foreground: 300 30% 96%;
+  }
+
+  /* ==================== 6. SCANDINAVIAN / JAPANDI ==================== */
+  html[data-theme-preset="scandinavian"] {
+    --background: 30 22% 94%; /* Warm cream sand */
+    --foreground: 25 15% 16%; /* Charcoal Earth */
+    --card: 30 35% 98%;
+    --card-foreground: 25 15% 16%;
+    --popover: 30 35% 98%;
+    --popover-foreground: 25 15% 16%;
+    --primary: 25 38% 36%; /* Terracotta */
+    --primary-foreground: 30 35% 98%;
+    --secondary: 35 15% 25%; /* Olive-ish brown */
+    --secondary-foreground: 30 35% 98%;
+    --muted: 30 18% 88%;
+    --muted-foreground: 30 8% 46%;
+    --accent: 30 22% 90%;
+    --accent-foreground: 25 38% 36%;
+    --success: 155 35% 40%; /* Sage green */
+    --warning: 38 60% 48%;
+    --danger: 15 65% 50%;
+    --border: 30 14% 86%;
+    --input: 30 14% 86%;
+    --ring: 25 38% 36%;
+    
+    --radius-card: 1.75rem; /* Cozy roundness */
+    --shadow-card: 0 4px 18px 0 rgba(139, 90, 43, 0.03);
+    --shadow-card-hover: 0 12px 30px -5px rgba(139, 90, 43, 0.07), 0 4px 12px -3px rgba(139, 90, 43, 0.03);
+    --transform-card-hover: translateY(-3px);
+    --border-card: 1px solid hsl(30 14% 84%);
+    --blur-card: none;
+    --card-opacity: 1;
+    --svg-stroke: 1.75px;
+
+    /* Bubbles */
+    --chat-bubble-out: 25 38% 36%;
+    --chat-bubble-out-foreground: 30 35% 98%;
+    --chat-bubble-in: 30 18% 88%;
+    --chat-bubble-in-foreground: 25 15% 16%;
+  }
+  html[data-theme-preset="scandinavian"].dark {
+    --background: 30 8% 9%; /* Dark warm charcoal */
+    --foreground: 30 15% 90%;
+    --card: 30 6% 13%; /* Cozy dark charcoal */
+    --card-foreground: 30 15% 90%;
+    --popover: 30 6% 12%;
+    --popover-foreground: 30 15% 90%;
+    --primary: 32 30% 70%; /* Soft warm gold mustard */
+    --primary-foreground: 30 8% 8%;
+    --secondary: 30 6% 20%;
+    --secondary-foreground: 30 15% 90%;
+    --muted: 30 6% 18%;
+    --muted-foreground: 30 10% 70%;
+    --accent: 30 6% 19%;
+    --accent-foreground: 32 30% 70%;
+    --border: 30 6% 21%;
+    --input: 30 6% 21%;
+    --ring: 32 30% 70%;
+    
+    --shadow-card: 0 6px 24px 0 rgba(0, 0, 0, 0.25);
+    --shadow-card-hover: 0 16px 36px 0 rgba(0, 0, 0, 0.35);
+    --border-card: 1px solid hsl(30 6% 20%);
+
+    /* Bubbles */
+    --chat-bubble-out: 32 30% 70%;
+    --chat-bubble-out-foreground: 30 8% 8%;
+    --chat-bubble-in: 30 6% 18%;
+    --chat-bubble-in-foreground: 30 15% 90%;
+  }
+
+  /* ==================== 7. BAUHAUS GEOMETRIC ==================== */
+  html[data-theme-preset="bauhaus"] {
+    --background: 60 30% 96%; /* Warm white */
+    --foreground: 0 0% 0%;
+    --card: 60 30% 99%;
+    --card-foreground: 0 0% 0%;
+    --popover: 60 30% 99%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 0 85% 50%; /* Bauhaus Red */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 80% 40%; /* Bauhaus Blue */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 60 10% 90%;
+    --muted-foreground: 0 0% 30%;
+    --accent: 45 95% 55%; /* Bauhaus Yellow */
+    --accent-foreground: 0 0% 0%;
+    --success: 142 70% 40%;
+    --warning: 32 95% 50%;
+    --danger: 350 85% 50%;
+    --border: 0 0% 0%;
+    --input: 0 0% 0%;
+    --ring: 0 0% 0%;
+    
+    --radius-card: 0px; /* Sharp corners */
+    --shadow-card: 4px 4px 0px #000000;
+    --shadow-card-hover: 7px 7px 0px #000000;
+    --transform-card-hover: translate(-3px, -3px);
+    --border-card: 2.5px solid #000000;
+    --blur-card: none;
+    --card-opacity: 1;
+    --svg-stroke: 2.25px;
+
+    /* Bubbles */
+    --chat-bubble-out: 0 85% 50%;
+    --chat-bubble-out-foreground: 0 0% 100%;
+    --chat-bubble-in: 220 80% 95%;
+    --chat-bubble-in-foreground: 0 0% 0%;
+  }
+  html[data-theme-preset="bauhaus"].dark {
+    --background: 0 0% 8%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 85% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 80% 50%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 45 95% 60%;
+    --accent-foreground: 0 0% 0%;
+    --border: 0 0% 100%;
+    --input: 0 0% 100%;
+    --ring: 0 0% 100%;
+    
+    --radius-card: 0px;
+    --shadow-card: 4px 4px 0px #ffffff;
+    --shadow-card-hover: 7px 7px 0px #ffffff;
+    --border-card: 2.5px solid #ffffff;
+
+    /* Bubbles */
+    --chat-bubble-out: 0 85% 55%;
+    --chat-bubble-out-foreground: 0 0% 100%;
+    --chat-bubble-in: 220 30% 18%;
+    --chat-bubble-in-foreground: 0 0% 100%;
+  }
+
+  /* ==================== 8. CYBERPUNK NEON ==================== */
+  html[data-theme-preset="cyberpunk"] {
+    --background: 180 50% 95%;
+    --foreground: 300 80% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 300 80% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 300 80% 10%;
+    --primary: 325 100% 45%; /* Neon Pink */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 180 60% 30%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 180 20% 90%;
+    --muted-foreground: 300 20% 40%;
+    --accent: 180 60% 88%;
+    --accent-foreground: 300 80% 10%;
+    --success: 145 70% 35%;
+    --warning: 40 90% 45%;
+    --danger: 345 80% 50%;
+    --border: 300 80% 20%;
+    --input: 300 80% 20%;
+    --ring: 325 100% 45%;
+    
+    --radius-card: 0px;
+    --shadow-card: 4px 4px 0px #d946ef;
+    --shadow-card-hover: 7px 7px 0px #d946ef, 0 0 10px rgba(217, 70, 239, 0.3);
+    --transform-card-hover: translate(-3px, -3px);
+    --border-card: 2px solid #d946ef;
+    --blur-card: none;
+    --card-opacity: 1;
+    --svg-stroke: 2px;
+
+    /* Bubbles */
+    --chat-bubble-out: 325 100% 45%;
+    --chat-bubble-out-foreground: 0 0% 100%;
+    --chat-bubble-in: 180 60% 88%;
+    --chat-bubble-in-foreground: 300 80% 10%;
+  }
+  html[data-theme-preset="cyberpunk"].dark {
+    --background: 260 40% 3%; /* Pitch black space */
+    --foreground: 180 100% 90%; /* Electric cyan text */
+    --card: 265 40% 6%;
+    --card-foreground: 180 100% 90%;
+    --popover: 265 40% 6%;
+    --popover-foreground: 180 100% 90%;
+    --primary: 325 100% 50%; /* Hot Pink */
+    --primary-foreground: 260 40% 3%;
+    --secondary: 180 100% 50%; /* Electric Cyan */
+    --secondary-foreground: 260 40% 3%;
+    --muted: 265 30% 12%;
+    --muted-foreground: 180 40% 70%;
+    --accent: 265 30% 14%;
+    --accent-foreground: 325 100% 50%;
+    --border: 180 100% 50%;
+    --input: 180 100% 50%;
+    --ring: 325 100% 50%;
+    
+    --radius-card: 0px;
+    --shadow-card: 4px 4px 0px #06b6d4;
+    --shadow-card-hover: 7px 7px 0px #06b6d4, 0 0 14px rgba(6, 182, 212, 0.45);
+    --border-card: 2px solid #06b6d4;
+
+    /* Bubbles */
+    --chat-bubble-out: 325 100% 50%;
+    --chat-bubble-out-foreground: 260 40% 3%;
+    --chat-bubble-in: 265 30% 14%;
+    --chat-bubble-in-foreground: 180 100% 90%;
+  }
+
+  /* ==================== 9. ART DECO LUXURY ==================== */
+  html[data-theme-preset="artdeco"] {
+    --background: 40 30% 94%; /* Warm cream */
+    --foreground: 160 30% 12%; /* Deep spruce */
+    --card: 40 40% 98%;
+    --card-foreground: 160 30% 12%;
+    --popover: 40 40% 98%;
+    --popover-foreground: 160 30% 12%;
+    --primary: 38 45% 42%; /* Rich Bronze Gold */
+    --primary-foreground: 40 40% 98%;
+    --secondary: 160 20% 25%;
+    --secondary-foreground: 40 40% 98%;
+    --muted: 40 15% 88%;
+    --muted-foreground: 160 15% 35%;
+    --accent: 38 45% 90%;
+    --accent-foreground: 38 45% 42%;
+    --success: 140 40% 35%;
+    --warning: 35 60% 45%;
+    --danger: 350 60% 45%;
+    --border: 38 35% 35%;
+    --input: 38 35% 35%;
+    --ring: 38 45% 42%;
+    
+    --radius-card: 12px;
+    --shadow-card: 0 4px 20px rgba(139, 90, 43, 0.08);
+    --shadow-card-hover: 0 10px 28px rgba(197, 168, 128, 0.22);
+    --transform-card-hover: translateY(-2px);
+    --border-card: 2px solid #c5a880;
+    --blur-card: none;
+    --card-opacity: 1;
+    --svg-stroke: 1.5px;
+
+    /* Bubbles */
+    --chat-bubble-out: 38 45% 42%;
+    --chat-bubble-out-foreground: 40 40% 98%;
+    --chat-bubble-in: 160 15% 90%;
+    --chat-bubble-in-foreground: 160 30% 12%;
+  }
+  html[data-theme-preset="artdeco"].dark {
+    --background: 220 30% 7%; /* Midnight Navy */
+    --foreground: 45 40% 90%; /* Soft Champagne */
+    --card: 160 15% 11%; /* Dark Spruce Forest */
+    --card-foreground: 45 40% 90%;
+    --popover: 160 15% 11%;
+    --popover-foreground: 45 40% 90%;
+    --primary: 38 45% 60%; /* Luxurious Metallic Gold */
+    --primary-foreground: 220 30% 7%;
+    --secondary: 38 25% 20%;
+    --secondary-foreground: 45 40% 90%;
+    --muted: 160 10% 16%;
+    --muted-foreground: 45 20% 70%;
+    --accent: 160 10% 18%;
+    --accent-foreground: 38 45% 60%;
+    --border: 38 35% 35%;
+    --input: 38 35% 35%;
+    --ring: 38 45% 60%;
+    
+    --radius-card: 12px;
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1.5px #c5a880;
+    --border-card: 2px dashed #c5a880;
+
+    /* Bubbles */
+    --chat-bubble-out: 38 45% 60%;
+    --chat-bubble-out-foreground: 220 30% 7%;
+    --chat-bubble-in: 220 20% 15%;
+    --chat-bubble-in-foreground: 45 40% 90%;
+  }
+
+  /* ==================== 10. FOREST SAGE ZEN ==================== */
+  html[data-theme-preset="forestzen"] {
+    --background: 90 20% 93%; /* Light Sage Moss */
+    --foreground: 135 40% 12%; /* Charcoal Forest */
+    --card: 60 15% 97%; /* Pale Warm Paper */
+    --card-foreground: 135 40% 12%;
+    --popover: 60 15% 97%;
+    --popover-foreground: 135 40% 12%;
+    --primary: 135 35% 25%; /* Warm Forest Green */
+    --primary-foreground: 60 15% 97%;
+    --secondary: 90 15% 45%;
+    --secondary-foreground: 60 15% 97%;
+    --muted: 90 10% 88%;
+    --muted-foreground: 135 15% 38%;
+    --accent: 90 15% 88%;
+    --accent-foreground: 135 35% 25%;
+    --success: 145 35% 35%;
+    --warning: 38 50% 45%;
+    --danger: 10 60% 45%;
+    --border: 100 15% 80%;
+    --input: 100 15% 80%;
+    --ring: 135 35% 25%;
+    
+    --radius-card: 2rem;
+    --shadow-card: 0 4px 12px rgba(45, 90, 45, 0.03);
+    --shadow-card-hover: 0 16px 36px rgba(45, 90, 45, 0.08), 0 4px 12px rgba(0, 0, 0, 0.02);
+    --transform-card-hover: translateY(-3px);
+    --border-card: 1px solid hsl(100 15% 78%);
+    --blur-card: none;
+    --card-opacity: 1;
+    --svg-stroke: 1.75px;
+
+    /* Bubbles */
+    --chat-bubble-out: 135 35% 25%;
+    --chat-bubble-out-foreground: 60 15% 97%;
+    --chat-bubble-in: 90 15% 88%;
+    --chat-bubble-in-foreground: 135 40% 12%;
+  }
+  html[data-theme-preset="forestzen"].dark {
+    --background: 140 20% 8%; /* Deep forest shadow */
+    --foreground: 90 30% 90%;
+    --card: 140 10% 12%; /* Sage-dark card */
+    --card-foreground: 90 30% 90%;
+    --popover: 140 10% 12%;
+    --popover-foreground: 90 30% 90%;
+    --primary: 95 30% 70%; /* Muted Pale Sage Green */
+    --primary-foreground: 140 20% 8%;
+    --secondary: 140 10% 20%;
+    --secondary-foreground: 90 30% 90%;
+    --muted: 140 12% 16%;
+    --muted-foreground: 90 15% 70%;
+    --accent: 140 12% 18%;
+    --accent-foreground: 95 30% 70%;
+    --border: 140 10% 18%;
+    --input: 140 10% 18%;
+    --ring: 95 30% 70%;
+    
+    --radius-card: 2rem;
+    --shadow-card: 0 6px 24px rgba(0, 0, 0, 0.3);
+    --shadow-card-hover: 0 20px 45px rgba(0, 0, 0, 0.45);
+    --border-card: 1px solid hsl(140 10% 16%);
+
+    /* Bubbles */
+    --chat-bubble-out: 95 30% 70%;
+    --chat-bubble-out-foreground: 140 20% 8%;
+    --chat-bubble-in: 140 12% 18%;
+    --chat-bubble-in-foreground: 90 30% 90%;
+  }
+
+  /* ==================== 11. MIDNIGHT SLATE ROYAL ==================== */
+  html[data-theme-preset="midnightroyal"] {
+    --background: 235 25% 96%; /* Pale royal lavender background */
+    --foreground: 240 50% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 50% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 50% 10%;
+    --primary: 230 80% 45%; /* Royal Deep Blue */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 30% 20%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 235 20% 90%;
+    --muted-foreground: 240 20% 45%;
+    --accent: 235 30% 91%;
+    --accent-foreground: 230 80% 45%;
+    --success: 150 70% 35%;
+    --warning: 35 80% 45%;
+    --danger: 345 80% 50%;
+    --border: 230 20% 88%;
+    --input: 230 20% 88%;
+    --ring: 230 80% 45%;
+    
+    --radius-card: 1.25rem;
+    --shadow-card: 0 4px 16px rgba(15, 23, 42, 0.05);
+    --shadow-card-hover: 0 12px 30px rgba(15, 23, 42, 0.12);
+    --transform-card-hover: translateY(-3px);
+    --border-card: 1px solid hsl(230 20% 86%);
+    --blur-card: none;
+    --card-opacity: 1;
+    --svg-stroke: 2px;
+
+    /* Bubbles */
+    --chat-bubble-out: 230 80% 45%;
+    --chat-bubble-out-foreground: 0 0% 100%;
+    --chat-bubble-in: 235 30% 91%;
+    --chat-bubble-in-foreground: 240 50% 10%;
+  }
+  html[data-theme-preset="midnightroyal"].dark {
+    --background: 235 50% 5%; /* Midnight Space Blue */
+    --foreground: 235 60% 94%;
+    --card: 240 30% 9%; /* Deep space card */
+    --card-foreground: 235 60% 94%;
+    --popover: 240 30% 9%;
+    --popover-foreground: 235 60% 94%;
+    --primary: 245 90% 70%; /* Electric indigo */
+    --primary-foreground: 235 50% 5%;
+    --secondary: 240 20% 14%;
+    --secondary-foreground: 235 60% 94%;
+    --muted: 240 20% 14%;
+    --muted-foreground: 235 20% 70%;
+    --accent: 240 20% 16%;
+    --accent-foreground: 245 90% 70%;
+    --border: 240 25% 18%;
+    --input: 240 25% 18%;
+    --ring: 245 90% 70%;
+    
+    --radius-card: 1.25rem;
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --shadow-card-hover: 0 20px 48px rgba(0, 0, 0, 0.65);
+    --border-card: 1px solid hsl(240 25% 16%);
+
+    /* Bubbles */
+    --chat-bubble-out: 245 90% 70%;
+    --chat-bubble-out-foreground: 235 50% 5%;
+    --chat-bubble-in: 240 25% 15%;
+    --chat-bubble-in-foreground: 235 60% 94%;
+  }
+
+  /* ==================== COLOR SCHEMES ACCENTS ==================== */
+  /* Ocean Blue */
+  html[data-color-scheme="ocean"] {
+    --primary: 217.2 91.2% 54%;
+    --primary-foreground: 210 40% 98%;
+    --chat-bubble-out: 217.2 91.2% 54%;
+    --chat-bubble-out-foreground: 210 40% 98%;
+  }
+  html[data-color-scheme="ocean"].dark {
+    --primary: 217.2 91.2% 64%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --chat-bubble-out: 217.2 91.2% 64%;
+    --chat-bubble-out-foreground: 222.2 47.4% 11.2%;
+  }
+
+  /* Emerald Forest Green */
+  html[data-color-scheme="forest"] {
+    --primary: 142.4 71.8% 34%;
+    --primary-foreground: 138.5 76.5% 96.7%;
+    --chat-bubble-out: 142.4 71.8% 34%;
+    --chat-bubble-out-foreground: 138.5 76.5% 96.7%;
+  }
+  html[data-color-scheme="forest"].dark {
+    --primary: 142.4 71.8% 48%;
+    --primary-foreground: 144 50% 10%;
+    --chat-bubble-out: 142.4 71.8% 48%;
+    --chat-bubble-out-foreground: 144 50% 10%;
+  }
+
+  /* Sunset Orange */
+  html[data-color-scheme="sunset"] {
+    --primary: 15.6 100% 50%;
+    --primary-foreground: 30 100% 97%;
+    --chat-bubble-out: 15.6 100% 50%;
+    --chat-bubble-out-foreground: 30 100% 97%;
+  }
+  html[data-color-scheme="sunset"].dark {
+    --primary: 20.5 100% 60%;
+    --primary-foreground: 20 50% 5%;
+    --chat-bubble-out: 20.5 100% 60%;
+    --chat-bubble-out-foreground: 20 50% 5%;
+  }
+
+  /* Royal Purple */
+  html[data-color-scheme="royal"] {
+    --primary: 262.1 83.3% 58%;
+    --primary-foreground: 210 40% 98%;
+    --chat-bubble-out: 262.1 83.3% 58%;
+    --chat-bubble-out-foreground: 210 40% 98%;
+  }
+  html[data-color-scheme="royal"].dark {
+    --primary: 263.4 80% 68%;
+    --primary-foreground: 260 25% 6%;
+    --chat-bubble-out: 263.4 80% 68%;
+    --chat-bubble-out-foreground: 260 25% 6%;
+  }
+
+  /* Crimson Ruby */
+  html[data-color-scheme="crimson"] {
+    --primary: 346.8 77.2% 49.8%;
+    --primary-foreground: 355.6 100% 97.3%;
+    --chat-bubble-out: 346.8 77.2% 49.8%;
+    --chat-bubble-out-foreground: 355.6 100% 97.3%;
+  }
+  html[data-color-scheme="crimson"].dark {
+    --primary: 346.8 90% 60%;
+    --primary-foreground: 355.6 100% 10%;
+    --chat-bubble-out: 346.8 90% 60%;
+    --chat-bubble-out-foreground: 355.6 100% 10%;
+  }
+
+  /* ==================== DYNAMIC BACKGROUND STYLES ==================== */
+  html[data-bg-style="sunset-grad"] body {
+    background-image: linear-gradient(135deg, #ffe5cf 0%, #fdb59f 100%) !important;
+    background-attachment: fixed;
+  }
+  html[data-bg-style="sunset-grad"].dark body {
+    background-image: linear-gradient(135deg, #1f120e 0%, #0d0604 100%) !important;
+    background-attachment: fixed;
+  }
+  html[data-bg-style="ocean-grad"] body {
+    background-image: linear-gradient(135deg, #dcf0ff 0%, #a9d6ff 100%) !important;
+    background-attachment: fixed;
+  }
+  html[data-bg-style="ocean-grad"].dark body {
+    background-image: linear-gradient(135deg, #091322 0%, #02060d 100%) !important;
+    background-attachment: fixed;
+  }
+  html[data-bg-style="forest-grad"] body {
+    background-image: linear-gradient(135deg, #ebfaeb 0%, #c2f0c2 100%) !important;
+    background-attachment: fixed;
+  }
+  html[data-bg-style="forest-grad"].dark body {
+    background-image: linear-gradient(135deg, #0a1708 0%, #030802 100%) !important;
+    background-attachment: fixed;
+  }
+  html[data-bg-style="midnight-grad"] body {
+    background-image: linear-gradient(135deg, #e4e7ff 0%, #d8c3ff 100%) !important;
+    background-attachment: fixed;
+  }
+  html[data-bg-style="midnight-grad"].dark body {
+    background-image: linear-gradient(135deg, #0d0c1c 0%, #160a22 100%) !important;
+    background-attachment: fixed;
+  }
+  html[data-bg-style="minimal-grid"] body {
+    background-color: hsl(var(--background)) !important;
+    background-image: radial-gradient(hsl(var(--border)) 1px, transparent 0) !important;
+    background-size: 24px 24px !important;
+    background-attachment: fixed;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body, input, select, textarea, button, select option, table, th, td {
+    font-family: var(--font-sans, 'Inter', sans-serif) !important;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+
+  /* Dynamic svg stroke adjustments based on theme variable */
+  svg {
+    stroke-width: var(--svg-stroke, 2px);
+    transition: stroke-width 0.2s ease;
+  }
+
+  /* Card Morphing */
+  .bg-card {
+    border-radius: var(--radius-card, 0.5rem) !important;
+    box-shadow: var(--shadow-card, 0 1px 3px rgba(0,0,0,0.1)) !important;
+    border: var(--border-card, 1px solid var(--color-border)) !important;
+    backdrop-filter: var(--blur-card, none) !important;
+    background-color: hsla(var(--card) / var(--card-opacity, 1)) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Chat Bubble Morphing */
+  .chat-bubble {
+    border-radius: calc(var(--radius-card, 0.5rem) * 1.25) !important;
+    box-shadow: var(--shadow-card, 0 1px 2px rgba(0,0,0,0.05)) !important;
+    border: var(--border-card, 1px solid var(--color-border)) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .chat-bubble-outgoing {
+    background-color: hsl(var(--chat-bubble-out)) !important;
+    color: hsl(var(--chat-bubble-out-foreground)) !important;
+    border-color: hsl(var(--chat-bubble-out) / 0.8) !important;
+  }
+  .chat-bubble-outgoing,
+  .chat-bubble-outgoing p,
+  .chat-bubble-outgoing span,
+  .chat-bubble-outgoing div,
+  .chat-bubble-outgoing strong,
+  .chat-bubble-outgoing a {
+    color: hsl(var(--chat-bubble-out-foreground)) !important;
+  }
+  .chat-bubble-outgoing code {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .chat-bubble-incoming {
+    background-color: hsl(var(--chat-bubble-in)) !important;
+    color: hsl(var(--chat-bubble-in-foreground)) !important;
+    border-color: hsl(var(--chat-bubble-in) / 0.8) !important;
+  }
+  .chat-bubble-incoming,
+  .chat-bubble-incoming p,
+  .chat-bubble-incoming span,
+  .chat-bubble-incoming div,
+  .chat-bubble-incoming strong,
+  .chat-bubble-incoming a {
+    color: hsl(var(--chat-bubble-in-foreground)) !important;
+  }
+  .chat-bubble-incoming code {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .chat-bubble a {
+    text-decoration: underline !important;
+    font-weight: 700 !important;
+  }
+  .chat-bubble a:hover {
+    opacity: 0.85 !important;
+  }
+
+  .bg-primary {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+  }
+  .bg-secondary {
+    background-color: hsl(var(--secondary)) !important;
+    color: hsl(var(--secondary-foreground)) !important;
+  }
+  .bg-accent {
+    background-color: hsl(var(--accent)) !important;
+    color: hsl(var(--accent-foreground)) !important;
+  }
+
+  /* Specific theme overrides for chat bubbles */
+  html[data-theme-preset="neobrutalist"] .chat-bubble,
+  html[data-theme-preset="bauhaus"] .chat-bubble {
+    border: 2px solid #000000 !important;
+    box-shadow: 2px 2px 0px 0px #000000 !important;
+    border-radius: 4px !important;
+  }
+  html[data-theme-preset="neobrutalist"].dark .chat-bubble,
+  html[data-theme-preset="bauhaus"].dark .chat-bubble {
+    border: 2px solid #ffffff !important;
+    box-shadow: 2px 2px 0px 0px #ffffff !important;
+    border-radius: 4px !important;
+  }
+
+  html[data-theme-preset="cyberpunk"] .chat-bubble {
+    border: 1.5px solid #d946ef !important;
+    box-shadow: 2px 2px 0px #d946ef !important;
+    border-radius: 4px !important;
+  }
+  html[data-theme-preset="cyberpunk"].dark .chat-bubble {
+    border: 1.5px solid #06b6d4 !important;
+    box-shadow: 2px 2px 0px #06b6d4 !important;
+    border-radius: 4px !important;
+  }
+
+  html[data-theme-preset="minimalist"] .chat-bubble {
+    border: 1px solid hsl(var(--border)) !important;
+    box-shadow: none !important;
+    border-radius: 0px !important;
+  }
+
+  /* Form inputs morphing */
+  input, select, textarea {
+    border-radius: calc(var(--radius-card, 0.5rem) * 0.75) !important;
+    transition: all 0.2s ease;
+  }
+  
+  html[data-theme-preset="neobrutalist"] input,
+  html[data-theme-preset="neobrutalist"] select,
+  html[data-theme-preset="neobrutalist"] textarea {
+    border: 2px solid #000 !important;
+    box-shadow: 2px 2px 0px #000;
+  }
+  html[data-theme-preset="neobrutalist"].dark input,
+  html[data-theme-preset="neobrutalist"].dark select,
+  html[data-theme-preset="neobrutalist"].dark textarea {
+    border: 2px solid #fff !important;
+    box-shadow: 2px 2px 0px #fff;
+  }
+  html[data-theme-preset="neobrutalist"] button.bg-primary {
+    border: 2px solid #000 !important;
+    box-shadow: 2.5px 2.5px 0px #000 !important;
+    color: #000 !important;
+    font-weight: 800 !important;
+  }
+  html[data-theme-preset="neobrutalist"].dark button.bg-primary {
+    border: 2px solid #fff !important;
+    box-shadow: 2.5px 2.5px 0px #fff !important;
+    color: #000 !important;
+    font-weight: 800 !important;
+  }
+
+  /* Button Morphing */
+  .rounded-md, .rounded-lg, .rounded {
+    border-radius: calc(var(--radius-card, 0.5rem) * 0.75) !important;
+  }
+
+  html[data-theme-preset="glassmorphism"] button.bg-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%) !important;
+    box-shadow: 0 4px 15px hsl(var(--primary) / 0.2) !important;
+  }
+}
+
+/* Custom scrollbars for productivity layout */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/40;
+}
+
+.rich-text-content p {
+  @apply mb-2;
+}
+.rich-text-content ul {
+  @apply list-disc pl-5 mb-2;
+}
+.rich-text-content ol {
+  @apply list-decimal pl-5 mb-2;
+}
+.rich-text-content li {
+  @apply mb-1;
+}
+.rich-text-content strong {
+  @apply font-bold text-foreground;
+}
+.rich-text-content em {
+  @apply italic;
+}
+.rich-text-content code {
+  @apply bg-muted text-foreground px-1 py-0.5 rounded font-mono text-sm;
+}
+
+/* Sidebar content area: animated padding synced to sidebar width */
+@media (min-width: 768px) {
+  .sidebar-content-area {
+    padding-left: 256px;
+    transition: padding-left 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .sidebar-content-area[data-collapsed="true"] {
+    padding-left: 64px;
+  }
+  /* Sync padding with actual expanded width (including hover-expansion) */
+  aside[data-expanded="true"] ~ .sidebar-content-area {
+    padding-left: 256px !important;
+  }
+}
+
+/* Premium micro-animation for cards */
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-card-in {
+  animation: card-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Smooth focus ring */
+*:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Note Editor Content overrides */
+.editor-content:empty::before {
+  content: attr(placeholder);
+  color: hsl(var(--muted-foreground));
+  opacity: 0.65;
+  pointer-events: none;
+}
+.editor-content ul {
+  list-style-type: disc !important;
+  margin-left: 1.25rem !important;
+  padding-left: 0.25rem !important;
+}
+.editor-content ol {
+  list-style-type: decimal !important;
+  margin-left: 1.25rem !important;
+  padding-left: 0.25rem !important;
+}
+.editor-content blockquote {
+  border-left: 3px solid hsl(var(--border)) !important;
+  padding-left: 0.75rem !important;
+  margin: 0.5rem 0 !important;
+  color: hsl(var(--muted-foreground)) !important;
+}
+.editor-content p {
+  margin-bottom: 0.5rem !important;
+}
+
+/* Fluid micro-transitions for all interactive elements */
+a, button, select, input, textarea, .cursor-pointer, .card, [role="button"], .chat-bubble {
+  transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+              color 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+              transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+              opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Subtle card hover animation - lift and soft shadow expansion */
+.bg-card {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.bg-card:hover {
+  transform: var(--transform-card-hover, translateY(-2px)) !important;
+  box-shadow: var(--shadow-card-hover, 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)) !important;
+}
+
+/* Transition on list elements and sidebar elements */
+.sidebar-link, .nav-item, .project-card, .task-card {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.sidebar-link:hover, .nav-item:hover {
+  transform: translateX(3px);
+}
+
+/* Interactive smooth scale on click (active state) for main buttons */
+button:active, .btn:active {
+  transform: scale(0.97);
+}
+
+/* Neobrutalist active states click displacement */
+html[data-theme-preset="neobrutalist"] button:active,
+html[data-theme-preset="neobrutalist"] .btn:active,
+html[data-theme-preset="bauhaus"] button:active,
+html[data-theme-preset="bauhaus"] .btn:active {
+  transform: translate(3px, 3px) !important;
+  box-shadow: 1px 1px 0px #000000 !important;
+}
+html[data-theme-preset="neobrutalist"].dark button:active,
+html[data-theme-preset="neobrutalist"].dark .btn:active,
+html[data-theme-preset="bauhaus"].dark button:active,
+html[data-theme-preset="bauhaus"].dark .btn:active {
+  transform: translate(3px, 3px) !important;
+  box-shadow: 1px 1px 0px #ffffff !important;
+}
+
+/* Cyberpunk active states click displacement */
+html[data-theme-preset="cyberpunk"] button:active,
+html[data-theme-preset="cyberpunk"] .btn:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 1px 1px 0px #d946ef !important;
+}
+html[data-theme-preset="cyberpunk"].dark button:active,
+html[data-theme-preset="cyberpunk"].dark .btn:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 1px 1px 0px #06b6d4 !important;
+}
+
+/* Premium inputs focus animation */
+input:focus, textarea:focus, select:focus {
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.15) !important;
+}
+
+/* Hide scrollbars utility */
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+}
+.scrollbar-none {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
+}
+
+
