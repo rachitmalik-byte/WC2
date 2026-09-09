@@ -2084,6 +2084,7 @@ class MemoryDB {
     } else if (receiverId) {
       msgs = this.messages.filter(m => !m.channel_id && m.sender_id === receiverId && m.receiver_id === currentUserId);
     }
+    let newlyAdded = false;
     msgs.forEach(m => {
       const exists = this.readReceipts.some(r => r.message_id === m.id && r.user_id === currentUserId);
       if (!exists) {
@@ -2092,9 +2093,13 @@ class MemoryDB {
           user_id: currentUserId,
           read_at: new Date().toISOString()
         });
+        newlyAdded = true;
       }
     });
-    this.notify('messages', 'update_all', { channelId, receiverId });
+    if (newlyAdded) {
+      this.persist('read_receipts');
+      this.notify('read_receipts', 'insert', { channelId, receiverId });
+    }
   }
 
   // --- IXR & EdTech Creative Operations Methods ---

@@ -87,11 +87,9 @@ export const MessagingView: React.FC = () => {
       if (activeDMUserId) {
         const msgs = await dbClient.getMessages(undefined, activeDMUserId);
         setMessages(msgs);
-        await dbClient.markMessagesAsRead(undefined, activeDMUserId);
       } else if (activeChannelId) {
         const msgs = await dbClient.getMessages(activeChannelId);
         setMessages(msgs);
-        await dbClient.markMessagesAsRead(activeChannelId, undefined);
       }
     } catch (err) {
       console.error('Error loading messages:', err);
@@ -104,14 +102,22 @@ export const MessagingView: React.FC = () => {
     loadInitialData();
   }, [currentUser]);
 
+  // Load messages and mark as read once when channel or DM changes
   useEffect(() => {
     loadMessages();
-  }, [activeChannelId, activeDMUserId]);
+    if (currentUser) {
+      if (activeDMUserId) {
+        dbClient.markMessagesAsRead(undefined, activeDMUserId).catch(console.error);
+      } else if (activeChannelId) {
+        dbClient.markMessagesAsRead(activeChannelId, undefined).catch(console.error);
+      }
+    }
+  }, [activeChannelId, activeDMUserId, currentUser?.id]);
 
   // Real-time updates subscription
   useEffect(() => {
-    const unsub = dbClient.subscribe((table) => {
-      if (table === 'messages') {
+    const unsub = dbClient.subscribe((table, type) => {
+      if (table === 'messages' && type !== 'read') {
         loadMessages();
       } else if (table === 'channels') {
         dbClient.getChannels().then(setChannels).catch(console.error);
@@ -220,90 +226,81 @@ export const MessagingView: React.FC = () => {
 
   // Parser for message content to render interactive Deliverable Asset Cards
   const renderMessageContent = (content: string) => {
-    const assetTagRegex = /\[asset:([^\]]+)\]/g;
-    const parts: React.ReactNode[] = [];
-    let lastIndex = 0;
-    let match;
-
-    while ((match = assetTagRegex.exec(content)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push(content.substring(lastIndex, match.index));
-      }
-      const assetId = match[1];
-      const matchedItem = workItems.find(i => i.id === assetId);
-
-      if (matchedItem) {
-        const openRemarks = (matchedItem.remarks || []).filter(r => r.status === 'open').length;
-        const hasBlocker = (matchedItem.remarks || []).some(r => r.status === 'open' && (r.severity === 'blocker' || r.severity === 'correction'));
-
-        parts.push(
-          <div
-            key={`asset-tag-${assetId}-${match.index}`}
-            className="my-2.5 p-3 rounded-xl border border-primary/25 bg-card/80 shadow-xs hover:shadow-md transition-all group flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
-          >
-            <div className="flex items-start gap-2.5 min-w-0">
-              <span className="p-2 rounded-lg bg-primary/10 text-primary shrink-0 mt-0.5">
-                {matchedItem.asset_type === 'video' && <Video className="h-4 w-4" />}
-                {matchedItem.asset_type === 'audio' && <Mic className="h-4 w-4" />}
-                {matchedItem.asset_type === 'quiz' && <CheckSquare className="h-4 w-4" />}
-                {matchedItem.asset_type === 'interactive_module' && <Layers className="h-4 w-4" />}
-              </span>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-bold text-foreground text-xs truncate group-hover:text-primary transition-colors">
-                    {matchedItem.title}
-                  </span>
-                  <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-primary/15 text-primary">
-                    v{matchedItem.latest_version_number || 1}
-                  </span>
-                  <span className="px-1.5 py-0.2 rounded text-[10px] font-medium bg-muted border border-border text-muted-foreground uppercase">
-                    {matchedItem.current_review_stage || matchedItem.status}
-                  </span>
-                </div>
-                <p className="text-[11px] text-muted-foreground truncate max-w-md mt-0.5">
-                  {matchedItem.instruction_text}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-              {openRemarks > 0 && (
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                  hasBlocker ? 'bg-red-500/20 text-red-600' : 'bg-amber-500/20 text-amber-600'
-                }`}>
-                  {openRemarks} open remark{openRemarks > 1 ? 's' : ''}
-                </span>
-              )}
-              <button
-                onClick={() => setActiveReviewItem(matchedItem)}
-                className="px-2.5 py-1 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-[11px] transition cursor-pointer flex items-center gap-1 shadow-xs"
-              >
-                <span>Open Review Drawer</span>
-                <ExternalLink className="h-3 w-3" />
-              </button>
-            </div>
-          </div>
-        );
-      } else {
-        parts.push(
-          <span key={`asset-missing-${assetId}`} className="font-mono text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-            [Deliverable #{assetId}]
-          </span>
-        );
-      }
-
-      lastIndex = assetTagRegex.lastIndex;
-    }
-
-    if (lastIndex < content.length) {
-      parts.push(content.substring(lastIndex));
-    }
+    if (!content) return null;
+    const parts = content.split(/(\[asset:[^\]]+\])/g);
 
     return (
       <div className="whitespace-pre-wrap leading-relaxed text-xs md:text-sm text-foreground/90">
-        {parts.map((p, i) => (
-          <React.Fragment key={i}>{p}</React.Fragment>
-        ))}
+        {parts.map((part, index) => {
+          const match = part.match(/^\[asset:([^\]]+)\]$/);
+          if (!match) {
+            return <React.Fragment key={index}>{part}</React.Fragment>;
+          }
+
+          const assetId = match[1];
+          const matchedItem = workItems.find(i => i.id === assetId);
+
+          if (!matchedItem) {
+            return (
+              <span key={index} className="font-mono text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground inline-block my-0.5">
+                [Deliverable #{assetId}]
+              </span>
+            );
+          }
+
+          const openRemarks = (matchedItem.remarks || []).filter(r => r.status === 'open').length;
+          const hasBlocker = (matchedItem.remarks || []).some(r => r.status === 'open' && (r.severity === 'blocker' || r.severity === 'correction'));
+
+          return (
+            <div
+              key={`asset-tag-${assetId}-${index}`}
+              className="my-2.5 p-3 rounded-xl border border-primary/25 bg-card/80 shadow-xs hover:shadow-md transition-all group flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+            >
+              <div className="flex items-start gap-2.5 min-w-0">
+                <span className="p-2 rounded-lg bg-primary/10 text-primary shrink-0 mt-0.5">
+                  {matchedItem.asset_type === 'video' && <Video className="h-4 w-4" />}
+                  {matchedItem.asset_type === 'audio' && <Mic className="h-4 w-4" />}
+                  {matchedItem.asset_type === 'quiz' && <CheckSquare className="h-4 w-4" />}
+                  {matchedItem.asset_type === 'interactive_module' && <Layers className="h-4 w-4" />}
+                </span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-bold text-foreground text-xs truncate group-hover:text-primary transition-colors">
+                      {matchedItem.title}
+                    </span>
+                    <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-primary/15 text-primary">
+                      v{matchedItem.latest_version_number || 1}
+                    </span>
+                    <span className="px-1.5 py-0.2 rounded text-[10px] font-medium bg-muted border border-border text-muted-foreground uppercase">
+                      {matchedItem.current_review_stage || matchedItem.status}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground truncate max-w-md mt-0.5">
+                    {matchedItem.instruction_text}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                {openRemarks > 0 && (
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    hasBlocker ? 'bg-red-500/20 text-red-600' : 'bg-amber-500/20 text-amber-600'
+                  }`}>
+                    {openRemarks} open remark{openRemarks > 1 ? 's' : ''}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setActiveReviewItem(matchedItem)}
+                  className="px-2.5 py-1 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-[11px] transition cursor-pointer flex items-center gap-1 shadow-xs"
+                >
+                  <span>Open Review Drawer</span>
+                  <ExternalLink className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
     );
   };
