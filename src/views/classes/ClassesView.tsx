@@ -1344,78 +1344,124 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
                     const audioCleared = [audL1, audL2].filter(i => i && (i.status === 'approved' || i.status === 'delivered')).length;
                     const quizCleared = [quizGen, quizRev, quizImp, quizTest].filter(i => i && (i.status === 'approved' || i.status === 'delivered')).length;
 
-                    // Render track card helper
-                    const renderTrackNode = (label: string, item?: WorkItem, badgeColor = 'bg-primary/10 text-primary border-primary/20') => {
+                    // Render track card helper with clear semantic status & stepper identity
+                    const renderTrackNode = (stepCode: string, stageTitle: string, item?: WorkItem) => {
                       if (!item) {
                         return (
-                          <div className="p-3 rounded-xl border border-dashed border-border/80 bg-muted/20 flex flex-col justify-between min-h-[110px]">
+                          <div className="p-4 rounded-2xl border border-dashed border-border/80 bg-muted/15 flex flex-col justify-between min-h-[135px]">
                             <div className="flex items-center justify-between">
-                              <span className="text-[11px] font-bold text-muted-foreground">{label}</span>
-                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Unscheduled</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border">
+                                  {stepCode}
+                                </span>
+                                <span className="text-xs font-semibold text-muted-foreground">{stageTitle}</span>
+                              </div>
+                              <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-muted/80 text-muted-foreground">Unscheduled</span>
                             </div>
-                            <p className="text-[10px] text-muted-foreground/70 italic mt-2">Awaiting queue instantiation</p>
+                            <p className="text-[11px] text-muted-foreground/60 italic mt-3">Awaiting pipeline queue instantiation</p>
                           </div>
                         );
                       }
 
+                      const isApproved = item.status === 'approved' || item.status === 'delivered';
                       const openRemarks = (item.remarks || []).filter(r => r.status === 'open').length;
                       const hasBlocker = (item.remarks || []).some(r => r.status === 'open' && (r.severity === 'blocker' || r.severity === 'correction'));
                       const hasConfidentialRemark = isPrivilegedRole && (item.remarks || []).some(r => r.is_confidential && r.status === 'open');
 
+                      // Unified Semantic Status Styling (Clean & high-contrast)
+                      let statusBadge: React.ReactNode;
+                      let cardBorder = 'border-border/80 hover:border-foreground/30';
+                      let cardBg = 'bg-card';
+
+                      if (isApproved) {
+                        cardBorder = 'border-emerald-500/40 hover:border-emerald-500';
+                        cardBg = 'bg-card hover:bg-emerald-500/[0.02]';
+                        statusBadge = (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                            <Check className="h-3 w-3" /> Approved
+                          </span>
+                        );
+                      } else if (hasBlocker || openRemarks > 0) {
+                        cardBorder = hasBlocker ? 'border-rose-500/50 hover:border-rose-500' : 'border-amber-500/50 hover:border-amber-500';
+                        cardBg = hasBlocker ? 'bg-rose-500/[0.02] hover:bg-rose-500/[0.04]' : 'bg-card';
+                        statusBadge = (
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                            hasBlocker
+                              ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
+                              : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30'
+                          }`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${hasBlocker ? 'bg-rose-500 animate-ping' : 'bg-amber-500'}`} />
+                            {openRemarks} {hasBlocker ? 'Blocker' : 'Remark'}{openRemarks > 1 ? 's' : ''}
+                          </span>
+                        );
+                      } else if (item.status === 'review_in_progress') {
+                        cardBorder = 'border-primary/40 hover:border-primary';
+                        cardBg = 'bg-card hover:bg-primary/[0.02]';
+                        statusBadge = (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
+                            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                            Tier: {item.current_review_stage || 'In Review'}
+                          </span>
+                        );
+                      } else {
+                        // Draft in progress
+                        cardBorder = 'border-border/80 hover:border-foreground/30';
+                        cardBg = 'bg-card';
+                        statusBadge = (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground border border-border">
+                            In Production
+                          </span>
+                        );
+                      }
+
                       return (
                         <div
                           onClick={() => setActiveReviewItem(item)}
-                          className={`p-3 rounded-xl border transition-all cursor-pointer shadow-xs hover:shadow-md flex flex-col justify-between min-h-[115px] group ${
-                            item.status === 'approved'
-                              ? 'bg-emerald-500/[0.04] border-emerald-500/30 hover:border-emerald-500'
-                              : item.status === 'review_in_progress'
-                              ? 'bg-purple-500/[0.04] border-purple-500/30 hover:border-purple-500'
-                              : 'bg-card border-border hover:border-primary'
-                          }`}
+                          className={`p-4 rounded-2xl border ${cardBorder} ${cardBg} transition-all cursor-pointer shadow-xs hover:shadow-md flex flex-col justify-between min-h-[140px] group relative select-none`}
                         >
                           <div>
-                            <div className="flex items-center justify-between gap-1 mb-1">
-                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${badgeColor}`}>
-                                {label}
-                              </span>
-                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                                item.status === 'approved' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
-                                item.status === 'review_in_progress' ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400' :
-                                'bg-blue-500/15 text-blue-600 dark:text-blue-400'
-                              }`}>
-                                {item.status === 'approved' ? '✓ Approved' : item.current_review_stage || item.status}
-                              </span>
+                            {/* Step Indicator and Status Pill */}
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-muted border border-border text-foreground shrink-0">
+                                  {stepCode}
+                                </span>
+                                <span className="text-[11px] font-semibold text-muted-foreground truncate">
+                                  {stageTitle}
+                                </span>
+                              </div>
+
+                              <div className="shrink-0">
+                                {statusBadge}
+                              </div>
                             </div>
-                            <h5 className="text-[11px] font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+
+                            {/* Deliverable Title */}
+                            <h5 className="text-xs font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
                               {item.title}
                             </h5>
                           </div>
 
-                          <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[10px] mt-2">
-                            <div className="flex items-center gap-1 min-w-0">
-                              <span className="h-4.5 w-4.5 rounded-full bg-primary/20 text-primary font-bold text-[8px] flex items-center justify-center shrink-0">
+                          {/* Footer Info: Assignee, Version, Client Direct flag */}
+                          <div className="pt-2.5 mt-2 border-t border-border/50 flex items-center justify-between text-[11px]">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="h-5 w-5 rounded-full bg-primary/15 text-primary flex items-center justify-center font-bold text-[9px] shrink-0">
                                 {getProfileName(item.assignee_ids[0]).slice(0, 2).toUpperCase()}
-                              </span>
-                              <span className="truncate text-muted-foreground text-[10px]">
+                              </div>
+                              <span className="truncate text-muted-foreground text-[11px]">
                                 {getProfileName(item.assignee_ids[0]).split(' ')[0]}
                               </span>
                             </div>
 
-                            <div className="flex items-center gap-1 shrink-0">
+                            <div className="flex items-center gap-1.5 shrink-0">
                               {hasConfidentialRemark && (
-                                <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-600 font-bold border border-amber-500/30" title="Confidential Client note exists on this asset">
-                                  🔒
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 border border-amber-500/30" title="Confidential Client note exists">
+                                  🔒 Direct
                                 </span>
                               )}
-                              {openRemarks > 0 ? (
-                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                                  hasBlocker ? 'bg-red-500/20 text-red-500' : 'bg-amber-500/20 text-amber-600'
-                                }`}>
-                                  {openRemarks} open
-                                </span>
-                              ) : (
-                                <span className="text-emerald-500 font-bold text-[9px]">v{item.latest_version_number}</span>
-                              )}
+                              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
+                                v{item.latest_version_number || 1}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -1485,80 +1531,181 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
                         {!isCollapsed && (
                           <div className="p-4 md:p-6 space-y-6">
                             
-                            {/* Pod 1: Script & Pedagogy Baseline Pod */}
-                            <div className="p-3.5 rounded-2xl bg-amber-500/[0.02] border border-amber-500/20 space-y-3">
-                              <div className="flex items-center justify-between">
-                                <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                                  <FileText className="h-3.5 w-3.5" />
-                                  <span>Pod 1 · Script & Pedagogical Direction (Baseline & Final HB Review)</span>
+                            {/* Pod 1: Script & Editorial Foundation */}
+                            <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xs">
+                              <div className="p-4 bg-muted/30 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                  <span className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
+                                    <FileText className="h-4 w-4" />
+                                  </span>
+                                  <div>
+                                    <h4 className="text-sm font-bold text-foreground">
+                                      Pod 1 · Editorial & Narrative Direction
+                                    </h4>
+                                    <p className="text-[11px] text-muted-foreground">
+                                      Foundational pedagogical script & final executive handbook clearance (HB Review)
+                                    </p>
+                                  </div>
                                 </div>
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">
-                                  Editorial Guardrails
+                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-muted border border-border text-foreground self-start sm:self-auto shrink-0">
+                                  {[scriptItem, hbItem].filter(i => i && (i.status === 'approved' || i.status === 'delivered')).length}/2 Cleared
                                 </span>
                               </div>
 
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {renderTrackNode('1. Script Draft', scriptItem, 'bg-amber-500/10 text-amber-600 border-amber-500/30')}
-                                {renderTrackNode('5. HB Review (Final Director Clearance)', hbItem, 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30')}
+                              <div className="p-4 md:p-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {renderTrackNode('Script', 'Script Draft & Storyboard', scriptItem)}
+                                  {renderTrackNode('HB', 'HB Final Director Clearance', hbItem)}
+                                </div>
                               </div>
                             </div>
 
-                            {/* Pod 2: Video Production Pipeline Pod */}
-                            <div className="p-3.5 rounded-2xl bg-blue-500/[0.02] border border-blue-500/20 space-y-3">
-                              <div className="flex items-center justify-between">
-                                <div className="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
-                                  <Video className="h-3.5 w-3.5" />
-                                  <span>Pod 2 · Video Multi-Level Track (L1 → L2 → L3 → L4)</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[10px] text-muted-foreground font-medium hidden sm:inline">Sequential or parallel review staging</span>
-                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600">
-                                    {videoCleared}/4 Cleared
+                            {/* Pod 2: Video Production Pipeline (L1 -> L4) */}
+                            <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xs">
+                              <div className="p-4 bg-muted/30 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                  <span className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">
+                                    <Video className="h-4 w-4" />
                                   </span>
+                                  <div>
+                                    <h4 className="text-sm font-bold text-foreground">
+                                      Pod 2 · Video Multi-Level Production Pipeline
+                                    </h4>
+                                    <p className="text-[11px] text-muted-foreground">
+                                      L1 Tech QC ➔ L2 3D Motion & VFX ➔ L3 Visual Polish ➔ L4 4K Master Grading
+                                    </p>
+                                  </div>
                                 </div>
+                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 self-start sm:self-auto shrink-0">
+                                  {videoCleared}/4 Cleared
+                                </span>
                               </div>
 
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                                {renderTrackNode('Video: L1 (Tech QC)', vidL1, 'bg-blue-500/10 text-blue-500 border-blue-500/20')}
-                                {renderTrackNode('Video: L2 (3D Motion)', vidL2, 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20')}
-                                {renderTrackNode('Video: L3 (Fine Polish)', vidL3, 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20')}
-                                {renderTrackNode('Video: L4 (4K Master)', vidL4, 'bg-purple-500/10 text-purple-500 border-purple-500/20')}
+                              <div className="p-4 md:p-5 space-y-4">
+                                {/* Horizontal Pipeline Stepper */}
+                                <div className="hidden sm:flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-muted/30 border border-border/60 text-xs font-semibold text-muted-foreground">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-foreground shrink-0">Workflow Stage:</span>
+                                  <div className="flex items-center gap-2 flex-1 max-w-xl justify-between">
+                                    <span className={`flex items-center gap-1 ${vidL1?.status === 'approved' ? 'text-emerald-600 font-bold' : vidL1 ? 'text-primary font-bold' : ''}`}>
+                                      {vidL1?.status === 'approved' ? '✓' : '1.'} Tech QC
+                                    </span>
+                                    <ArrowRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                                    <span className={`flex items-center gap-1 ${vidL2?.status === 'approved' ? 'text-emerald-600 font-bold' : vidL2 ? 'text-primary font-bold' : ''}`}>
+                                      {vidL2?.status === 'approved' ? '✓' : '2.'} 3D Motion
+                                    </span>
+                                    <ArrowRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                                    <span className={`flex items-center gap-1 ${vidL3?.status === 'approved' ? 'text-emerald-600 font-bold' : vidL3 ? 'text-primary font-bold' : ''}`}>
+                                      {vidL3?.status === 'approved' ? '✓' : '3.'} Visual Polish
+                                    </span>
+                                    <ArrowRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                                    <span className={`flex items-center gap-1 ${vidL4?.status === 'approved' ? 'text-emerald-600 font-bold' : vidL4 ? 'text-primary font-bold' : ''}`}>
+                                      {vidL4?.status === 'approved' ? '✓' : '4.'} 4K Master
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                                  {renderTrackNode('L1', 'Tech QC Rough Cut', vidL1)}
+                                  {renderTrackNode('L2', '3D Motion & VFX', vidL2)}
+                                  {renderTrackNode('L3', 'Visual Polish & Sync', vidL3)}
+                                  {renderTrackNode('L4', '4K Master Grade', vidL4)}
+                                </div>
                               </div>
                             </div>
 
-                            {/* Pod 3: Audio & Sound Pipeline Pod */}
-                            <div className="p-3.5 rounded-2xl bg-purple-500/[0.02] border border-purple-500/20 space-y-3">
-                              <div className="flex items-center justify-between">
-                                <div className="text-[11px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
-                                  <Mic className="h-3.5 w-3.5" />
-                                  <span>Pod 3 · Audio & Voiceover Track (L1 → L2)</span>
+                            {/* Pod 3: Audio & Sound Pipeline (L1 -> L2) */}
+                            <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xs">
+                              <div className="p-4 bg-muted/30 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                  <span className="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shrink-0">
+                                    <Mic className="h-4 w-4" />
+                                  </span>
+                                  <div>
+                                    <h4 className="text-sm font-bold text-foreground">
+                                      Pod 3 · Audio & Voiceover Pipeline
+                                    </h4>
+                                    <p className="text-[11px] text-muted-foreground">
+                                      L1 Voiceover Recording & EQ ➔ L2 SFX & Ambience Spatial Mix
+                                    </p>
+                                  </div>
                                 </div>
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600">
+                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 self-start sm:self-auto shrink-0">
                                   {audioCleared}/2 Cleared
                                 </span>
                               </div>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {renderTrackNode('Audio: L1 (Voiceover EQ)', audL1, 'bg-purple-500/10 text-purple-500 border-purple-500/20')}
-                                {renderTrackNode('Audio: L2 (SFX & Ambience)', audL2, 'bg-fuchsia-500/10 text-fuchsia-500 border-fuchsia-500/20')}
+
+                              <div className="p-4 md:p-5 space-y-4">
+                                {/* Audio Stepper */}
+                                <div className="hidden sm:flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-muted/30 border border-border/60 text-xs font-semibold text-muted-foreground">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-foreground shrink-0">Audio Mix Flow:</span>
+                                  <div className="flex items-center gap-3 flex-1 max-w-sm justify-between">
+                                    <span className={`flex items-center gap-1 ${audL1?.status === 'approved' ? 'text-emerald-600 font-bold' : audL1 ? 'text-primary font-bold' : ''}`}>
+                                      {audL1?.status === 'approved' ? '✓' : '1.'} Voiceover EQ
+                                    </span>
+                                    <ArrowRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                                    <span className={`flex items-center gap-1 ${audL2?.status === 'approved' ? 'text-emerald-600 font-bold' : audL2 ? 'text-primary font-bold' : ''}`}>
+                                      {audL2?.status === 'approved' ? '✓' : '2.'} SFX & Ambience Mix
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                  {renderTrackNode('L1', 'Voiceover & Dialogue EQ', audL1)}
+                                  {renderTrackNode('L2', 'Sound Design & Ambience', audL2)}
+                                </div>
                               </div>
                             </div>
 
-                            {/* Pod 4: Interactive Quiz & Pedagogical Assessment Pod */}
-                            <div className="p-3.5 rounded-2xl bg-emerald-500/[0.02] border border-emerald-500/20 space-y-3">
-                              <div className="flex items-center justify-between">
-                                <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                                  <CheckSquare className="h-3.5 w-3.5" />
-                                  <span>Pod 4 · Interactive Quiz Track (Generation → Review → Implementation → Testing)</span>
+                            {/* Pod 4: Interactive Quiz & Pedagogical QA */}
+                            <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xs">
+                              <div className="p-4 bg-muted/30 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                  <span className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                                    <CheckSquare className="h-4 w-4" />
+                                  </span>
+                                  <div>
+                                    <h4 className="text-sm font-bold text-foreground">
+                                      Pod 4 · Interactive Quiz & Pedagogical Assessment
+                                    </h4>
+                                    <p className="text-[11px] text-muted-foreground">
+                                      Question Generation ➔ Subject SME Review ➔ Interactive Engine Code ➔ QA Validation
+                                    </p>
+                                  </div>
                                 </div>
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">
+                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 self-start sm:self-auto shrink-0">
                                   {quizCleared}/4 Cleared
                                 </span>
                               </div>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                                {renderTrackNode('Quiz: Generation', quizGen, 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20')}
-                                {renderTrackNode('Quiz: Review', quizRev, 'bg-teal-500/10 text-teal-600 border-teal-500/20')}
-                                {renderTrackNode('Quiz: Implementation', quizImp, 'bg-amber-500/10 text-amber-600 border-amber-500/20')}
-                                {renderTrackNode('Quiz: Testing QA', quizTest, 'bg-rose-500/10 text-rose-600 border-rose-500/20')}
+
+                              <div className="p-4 md:p-5 space-y-4">
+                                {/* Quiz Stepper */}
+                                <div className="hidden sm:flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-muted/30 border border-border/60 text-xs font-semibold text-muted-foreground">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-foreground shrink-0">Pedagogy Flow:</span>
+                                  <div className="flex items-center gap-2 flex-1 max-w-xl justify-between">
+                                    <span className={`flex items-center gap-1 ${quizGen?.status === 'approved' ? 'text-emerald-600 font-bold' : quizGen ? 'text-primary font-bold' : ''}`}>
+                                      {quizGen?.status === 'approved' ? '✓' : '1.'} Generation
+                                    </span>
+                                    <ArrowRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                                    <span className={`flex items-center gap-1 ${quizRev?.status === 'approved' ? 'text-emerald-600 font-bold' : quizRev ? 'text-primary font-bold' : ''}`}>
+                                      {quizRev?.status === 'approved' ? '✓' : '2.'} SME Review
+                                    </span>
+                                    <ArrowRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                                    <span className={`flex items-center gap-1 ${quizImp?.status === 'approved' ? 'text-emerald-600 font-bold' : quizImp ? 'text-primary font-bold' : ''}`}>
+                                      {quizImp?.status === 'approved' ? '✓' : '3.'} Implementation
+                                    </span>
+                                    <ArrowRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                                    <span className={`flex items-center gap-1 ${quizTest?.status === 'approved' ? 'text-emerald-600 font-bold' : quizTest ? 'text-primary font-bold' : ''}`}>
+                                      {quizTest?.status === 'approved' ? '✓' : '4.'} Testing QA
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                                  {renderTrackNode('Gen', 'Question Design (SME)', quizGen)}
+                                  {renderTrackNode('Rev', 'Pedagogical Review', quizRev)}
+                                  {renderTrackNode('Impl', 'Interactive Engine Dev', quizImp)}
+                                  {renderTrackNode('QA', 'Edge-Case & QA Test', quizTest)}
+                                </div>
                               </div>
                             </div>
 
