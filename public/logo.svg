@@ -1,19 +1,37 @@
-<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="logo-grad" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#6366f1" />
-      <stop offset="50%" stop-color="#8b5cf6" />
-      <stop offset="100%" stop-color="#06b6d4" />
+    <linearGradient id="wc2-teal" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0D9488" />
+      <stop offset="50%" stop-color="#0F766E" />
+      <stop offset="100%" stop-color="#115E59" />
     </linearGradient>
+    <linearGradient id="wc2-mint" x1="8" y1="8" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2DD4BF" />
+      <stop offset="100%" stop-color="#0D9488" />
+    </linearGradient>
+    <linearGradient id="wc2-accent" x1="16" y1="12" x2="40" y2="38" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+    <filter id="wc2-shadow" x="0" y="0" width="48" height="48" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0F766E" flood-opacity="0.18" />
+    </filter>
   </defs>
-  <!-- Base glowing background glow -->
-  <path d="M9 6h7c5.523 0 10 4.477 10 10s-4.477 10-10 10H9V6z" fill="url(#logo-grad)" fill-opacity="0.15" />
-  <!-- Dynamic loop/ribbon representing relay -->
-  <path d="M9 26V6h7.5c4.694 0 8.5 3.806 8.5 8.5S21.194 23 16.5 23H9" stroke="url(#logo-grad)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
-  <path d="M15 20l7.5 8" stroke="url(#logo-grad)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
-  <!-- Connecting communication node -->
-  <circle cx="16.5" cy="14.5" r="2" fill="#ffffff" stroke="url(#logo-grad)" stroke-width="2" />
-  <circle cx="22.5" cy="28" r="2.5" fill="#06b6d4" />
-  <circle cx="9" cy="6" r="2.5" fill="#6366f1" />
-  <circle cx="9" cy="26" r="2.5" fill="#8b5cf6" />
+
+  <!-- Calm Porcelain Container with Subtle Rounded Border -->
+  <rect x="2" y="2" width="44" height="44" rx="12" fill="#F0FDFA" stroke="#CCFBF1" stroke-width="1.5" />
+  
+  <!-- Interlocking Creative Workflow "W" and "C" Geometry -->
+  <!-- Layer 1: Left Wing / Wave of W -->
+  <path d="M12 15L17 31L22 19L26 27L31 15" stroke="url(#wc2-teal)" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" filter="url(#wc2-shadow)" />
+  
+  <!-- Layer 2: Orbiting "C" Aperture Loop representing Review Cycles (L1-L5) -->
+  <path d="M34 19C36.5 21.2 38 24.4 38 28C38 33.5 33.5 38 28 38C22.8 38 18.5 34 18.1 29" stroke="url(#wc2-mint)" stroke-width="3" stroke-linecap="round" stroke-dasharray="0.5 0" />
+
+  <!-- Layer 3: Review Marker Pulse Pin (Timestamp / Frame.io dot) -->
+  <circle cx="34" cy="18" r="3.2" fill="#0D9488" />
+  <circle cx="34" cy="18" r="1.5" fill="#FFFFFF" />
+  
+  <!-- Layer 4: Agile Innovation Accent Spark -->
+  <circle cx="26" cy="12" r="2.2" fill="url(#wc2-accent)" />
 </svg>

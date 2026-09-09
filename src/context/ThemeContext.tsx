@@ -43,40 +43,38 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [themePreset, setThemePresetState] = useState<ThemePreset>(() => {
-    return (localStorage.getItem('relayhq_theme_preset') as ThemePreset) || 'corporate';
+    return (localStorage.getItem('wc2_theme_preset') as ThemePreset) || 'corporate';
   });
 
   const [themeMode, setThemeModeState] = useState<ThemeMode>(() => {
-    const saved = localStorage.getItem('relayhq_theme_mode') as ThemeMode;
+    const saved = localStorage.getItem('wc2_theme_mode') as ThemeMode;
     if (saved) return saved;
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
+    // Default to clean, calm LIGHT interface
     return 'light';
   });
 
   const [fontFamily, setFontFamilyState] = useState<FontFamily>(() => {
-    return (localStorage.getItem('relayhq_font_family') as FontFamily) || 'inter';
+    return (localStorage.getItem('wc2_font_family') as FontFamily) || 'inter';
   });
 
   const [colorScheme, setColorSchemeState] = useState<ColorScheme>(() => {
-    return (localStorage.getItem('relayhq_color_scheme') as ColorScheme) || 'default';
+    return (localStorage.getItem('wc2_color_scheme') as ColorScheme) || 'default';
   });
 
   const [bgStyle, setBgStyleState] = useState<BgStyle>(() => {
-    return (localStorage.getItem('relayhq_bg_style') as BgStyle) || 'default';
+    return (localStorage.getItem('wc2_bg_style') as BgStyle) || 'default';
   });
 
   const [customPrimary, setCustomPrimaryState] = useState<string>(() => {
-    return localStorage.getItem('relayhq_custom_primary') || '';
+    return localStorage.getItem('wc2_custom_primary') || '';
   });
 
   const [customBg, setCustomBgState] = useState<string>(() => {
-    return localStorage.getItem('relayhq_custom_bg') || '';
+    return localStorage.getItem('wc2_custom_bg') || '';
   });
 
   const [customCard, setCustomCardState] = useState<string>(() => {
-    return localStorage.getItem('relayhq_custom_card') || '';
+    return localStorage.getItem('wc2_custom_card') || '';
   });
 
   useEffect(() => {
@@ -145,7 +143,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const setThemePreset = (preset: ThemePreset) => {
     setThemePresetState(preset);
-    localStorage.setItem('relayhq_theme_preset', preset);
+    localStorage.setItem('wc2_theme_preset', preset);
 
     // Apply distinct signature templates (font, colorScheme, bgStyle, themeMode)
     if (preset === 'cyberpunk') {
@@ -208,48 +206,48 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const setThemeMode = (mode: ThemeMode) => {
     setThemeModeState(mode);
-    localStorage.setItem('relayhq_theme_mode', mode);
+    localStorage.setItem('wc2_theme_mode', mode);
   };
 
   const setFontFamily = (font: FontFamily) => {
     setFontFamilyState(font);
-    localStorage.setItem('relayhq_font_family', font);
+    localStorage.setItem('wc2_font_family', font);
   };
 
   const setColorScheme = (scheme: ColorScheme) => {
     setColorSchemeState(scheme);
-    localStorage.setItem('relayhq_color_scheme', scheme);
+    localStorage.setItem('wc2_color_scheme', scheme);
   };
 
   const setBgStyle = (style: BgStyle) => {
     setBgStyleState(style);
-    localStorage.setItem('relayhq_bg_style', style);
+    localStorage.setItem('wc2_bg_style', style);
   };
 
   const setCustomPrimary = (color: string) => {
     setCustomPrimaryState(color);
     if (color) {
-      localStorage.setItem('relayhq_custom_primary', color);
+      localStorage.setItem('wc2_custom_primary', color);
     } else {
-      localStorage.removeItem('relayhq_custom_primary');
+      localStorage.removeItem('wc2_custom_primary');
     }
   };
 
   const setCustomBg = (color: string) => {
     setCustomBgState(color);
     if (color) {
-      localStorage.setItem('relayhq_custom_bg', color);
+      localStorage.setItem('wc2_custom_bg', color);
     } else {
-      localStorage.removeItem('relayhq_custom_bg');
+      localStorage.removeItem('wc2_custom_bg');
     }
   };
 
   const setCustomCard = (color: string) => {
     setCustomCardState(color);
     if (color) {
-      localStorage.setItem('relayhq_custom_card', color);
+      localStorage.setItem('wc2_custom_card', color);
     } else {
-      localStorage.removeItem('relayhq_custom_card');
+      localStorage.removeItem('wc2_custom_card');
     }
   };
 

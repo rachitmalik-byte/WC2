@@ -754,7 +754,7 @@ const MainAppContent: React.FC = () => {
     return (
       <div className="flex h-screen w-screen flex-col items-center justify-center gap-2 bg-background">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <span className="text-xs text-muted-foreground font-semibold">Bootstrapping RelayHQ...</span>
+        <span className="text-xs text-muted-foreground font-semibold">Bootstrapping WC 2.0...</span>
       </div>
     );
   }

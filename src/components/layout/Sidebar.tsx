@@ -148,13 +148,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           style={{ paddingLeft: isExpanded ? '16px' : '0', paddingRight: isExpanded ? '12px' : '0', justifyContent: isExpanded ? 'space-between' : 'center', transition: 'padding 220ms cubic-bezier(0.4, 0, 0.2, 1)' }}
         >
           <div className="flex items-center min-w-0" style={{ gap: isExpanded ? '10px' : '0' }}>
-            <img src="/logo.svg" className="h-8 w-8 flex-shrink-0 object-contain rounded-lg shadow-sm" alt="RelayHQ" />
-            <span
-              className="text-sm font-extrabold text-foreground tracking-tight whitespace-nowrap overflow-hidden"
-              style={{ opacity: isExpanded ? 1 : 0, maxWidth: isExpanded ? '120px' : '0', transition: 'opacity 180ms ease, max-width 220ms cubic-bezier(0.4,0,0.2,1)' }}
+            <img src="/logo.svg" className="h-8 w-8 flex-shrink-0 object-contain rounded-lg shadow-sm" alt="WC 2.0" />
+            <div
+              className="flex flex-col min-w-0"
+              style={{ opacity: isExpanded ? 1 : 0, maxWidth: isExpanded ? '130px' : '0', transition: 'opacity 180ms ease, max-width 220ms cubic-bezier(0.4,0,0.2,1)' }}
             >
-              RelayHQ
-            </span>
+              <span className="text-sm font-black text-foreground tracking-tight leading-tight">WC 2.0</span>
+              <span className="text-[9px] font-bold text-primary uppercase tracking-wider">IXR Operations</span>
+            </div>
           </div>
 
           {/* Collapse toggle - only shown when expanded */}

@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ReviewDrawer } from '../../components/ui/ReviewDrawer';
 import {
   Layers, Table, Kanban, Plus, Search, Video, Mic, CheckSquare,
-  FileText, ExternalLink
+  FileText, ExternalLink, Download, CheckCheck, Sparkles
 } from 'lucide-react';
 
 interface ClassesViewProps {
@@ -23,6 +23,8 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
   const [assetTypeFilter, setAssetTypeFilter] = useState<string>('all');
   const [roleQueueFilter, setRoleQueueFilter] = useState<string>('all');
   const [reviewStageFilter, setReviewStageFilter] = useState<string>('all');
+  const [quickFilter, setQuickFilter] = useState<'all' | 'blockers' | 'parallel' | 'my_queue' | 'review' | 'approved'>('all');
+  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
 
   // Selected item for Frame.io style Review Drawer
   const [activeReviewItem, setActiveReviewItem] = useState<WorkItem | null>(null);
@@ -74,11 +76,32 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
     return profiles.find(p => p.id === id)?.full_name || 'Unassigned';
   };
 
+  // Counts for speed filter chips
+  const blockersCount = workItems.filter(i => (i.remarks || []).some(r => r.status === 'open' && (r.severity === 'blocker' || r.severity === 'correction'))).length;
+  const parallelCount = workItems.filter(i => i.is_parallel_review_allowed).length;
+  const myQueueCount = workItems.filter(i => currentUser && (i.assignee_ids?.includes(currentUser.id) || i.reviewer_ids?.includes(currentUser.id))).length;
+  const pendingReviewCount = workItems.filter(i => i.status === 'review_in_progress').length;
+  const approvedCount = workItems.filter(i => i.status === 'approved' || i.status === 'delivered').length;
+
   // Filter items
   const filteredItems = workItems.filter(item => {
     if (selectedClassId !== 'all' && item.project_id !== selectedClassId) return false;
     if (assetTypeFilter !== 'all' && item.asset_type !== assetTypeFilter) return false;
     if (reviewStageFilter !== 'all' && !item.current_review_stage?.includes(reviewStageFilter)) return false;
+
+    // Quick speed-filter chips
+    if (quickFilter === 'blockers') {
+      const hasBlocker = (item.remarks || []).some(r => r.status === 'open' && (r.severity === 'blocker' || r.severity === 'correction'));
+      if (!hasBlocker) return false;
+    } else if (quickFilter === 'parallel') {
+      if (!item.is_parallel_review_allowed) return false;
+    } else if (quickFilter === 'my_queue') {
+      if (!currentUser || (!item.assignee_ids?.includes(currentUser.id) && !item.reviewer_ids?.includes(currentUser.id))) return false;
+    } else if (quickFilter === 'review') {
+      if (item.status !== 'review_in_progress') return false;
+    } else if (quickFilter === 'approved') {
+      if (item.status !== 'approved' && item.status !== 'delivered') return false;
+    }
 
     // Role Queue Filter (e.g. show items assigned to video editors or audio creators)
     if (roleQueueFilter === 'my_work') {
@@ -97,6 +120,119 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
     }
     return true;
   });
+
+  // Batch action handlers
+  const toggleSelectAll = () => {
+    if (selectedItemIds.length === filteredItems.length && filteredItems.length > 0) {
+      setSelectedItemIds([]);
+    } else {
+      setSelectedItemIds(filteredItems.map(i => i.id));
+    }
+  };
+
+  const toggleSelectItem = (id: string) => {
+    setSelectedItemIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleBatchAdvanceStage = async () => {
+    if (selectedItemIds.length === 0 || !currentUser) return;
+    const stageFlow: Record<string, string> = {
+      'L1': 'L2',
+      'L2': 'L3',
+      'L3': 'L4',
+      'L4': 'Approved'
+    };
+    for (const id of selectedItemIds) {
+      const item = workItems.find(i => i.id === id);
+      if (item) {
+        const nextStage = stageFlow[item.current_review_stage] || 'L2';
+        await dbClient.updateWorkItem(id, {
+          current_review_stage: nextStage,
+          status: nextStage === 'Approved' ? 'approved' : 'review_in_progress'
+        }, currentUser.id);
+      }
+    }
+    setSelectedItemIds([]);
+    await loadData();
+  };
+
+  const handleBatchApprove = async () => {
+    if (selectedItemIds.length === 0 || !currentUser) return;
+    for (const id of selectedItemIds) {
+      await dbClient.updateWorkItem(id, {
+        status: 'approved',
+        current_review_stage: 'Approved'
+      }, currentUser.id);
+    }
+    setSelectedItemIds([]);
+    await loadData();
+  };
+
+  const handleBatchToggleParallel = async () => {
+    if (selectedItemIds.length === 0 || !currentUser) return;
+    for (const id of selectedItemIds) {
+      const item = workItems.find(i => i.id === id);
+      if (item) {
+        await dbClient.updateWorkItem(id, {
+          is_parallel_review_allowed: !item.is_parallel_review_allowed
+        }, currentUser.id);
+      }
+    }
+    setSelectedItemIds([]);
+    await loadData();
+  };
+
+  const handleExportCSV = () => {
+    const headers = [
+      'ID',
+      'Class Code',
+      'Class Name',
+      'Asset Title',
+      'Asset Type',
+      'Status',
+      'Review Stage',
+      'Parallel Review Allowed',
+      'Latest Version',
+      'Open Remarks Count',
+      'Assignees',
+      'Reviewers',
+      'Drive Folder URL'
+    ];
+
+    const rows = filteredItems.map((item) => {
+      const cls = classes.find(c => c.id === item.project_id);
+      const openRemarks = (item.remarks || []).filter(r => r.status === 'open').length;
+      const assignees = (item.assignee_ids || []).map(id => getProfileName(id)).join('; ');
+      const reviewers = (item.reviewer_ids || []).map(id => getProfileName(id)).join('; ');
+
+      return [
+        item.id,
+        `"${(cls?.code || '').replace(/"/g, '""')}"`,
+        `"${(cls?.name || '').replace(/"/g, '""')}"`,
+        `"${item.title.replace(/"/g, '""')}"`,
+        item.asset_type,
+        item.status,
+        item.current_review_stage,
+        item.is_parallel_review_allowed ? 'Yes' : 'No',
+        `v${item.latest_version_number || 1}`,
+        openRemarks,
+        `"${assignees.replace(/"/g, '""')}"`,
+        `"${reviewers.replace(/"/g, '""')}"`,
+        `"${(item.drive_folder_url || '').replace(/"/g, '""')}"`
+      ].join(',');
+    });
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `wc2_assets_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Handle Quick Create Work Item
   const handleCreateWorkItem = async (e: React.FormEvent) => {
@@ -248,6 +384,15 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
             </button>
 
             <button
+              onClick={handleExportCSV}
+              title="Export filtered assets to CSV / Excel spreadsheet"
+              className="px-3 py-1.5 rounded-xl border border-border bg-card text-foreground hover:bg-muted text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+            >
+              <Download className="h-3.5 w-3.5 text-primary" />
+              <span>Export CSV</span>
+            </button>
+
+            <button
               onClick={() => setIsCreatingItem(true)}
               className="px-3.5 py-1.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-sm"
             >
@@ -330,11 +475,137 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
             </select>
           </div>
         </div>
+
+        {/* Quick Speed-Filter Pills */}
+        <div className="flex items-center gap-2 pt-3 flex-wrap text-xs border-t border-border/50 mt-3">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mr-1 flex items-center gap-1">
+            <Sparkles className="h-3 w-3 text-primary" />
+            <span>Speed Filter:</span>
+          </span>
+
+          <button
+            onClick={() => setQuickFilter('all')}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              quickFilter === 'all'
+                ? 'bg-foreground text-background shadow-sm'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            All ({workItems.length})
+          </button>
+
+          <button
+            onClick={() => setQuickFilter('blockers')}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              quickFilter === 'blockers'
+                ? 'bg-red-500 text-white shadow-sm'
+                : 'bg-card border border-red-500/30 text-red-500 hover:bg-red-500/10'
+            }`}
+          >
+            <span>🚨 Critical Blockers</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-red-500/20">{blockersCount}</span>
+          </button>
+
+          <button
+            onClick={() => setQuickFilter('parallel')}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              quickFilter === 'parallel'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'bg-card border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10'
+            }`}
+          >
+            <span>⚡ Parallel Queue</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-500/20">{parallelCount}</span>
+          </button>
+
+          <button
+            onClick={() => setQuickFilter('my_queue')}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              quickFilter === 'my_queue'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <span>👤 My Assigned</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-primary/15 text-primary">{myQueueCount}</span>
+          </button>
+
+          <button
+            onClick={() => setQuickFilter('review')}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              quickFilter === 'review'
+                ? 'bg-purple-600 text-white shadow-sm'
+                : 'bg-card border border-purple-500/30 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10'
+            }`}
+          >
+            <span>⏳ In Review</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-purple-500/20">{pendingReviewCount}</span>
+          </button>
+
+          <button
+            onClick={() => setQuickFilter('approved')}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              quickFilter === 'approved'
+                ? 'bg-emerald-700 text-white shadow-sm'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <span>✓ Approved ({approvedCount})</span>
+          </button>
+
+          <div className="ml-auto hidden xl:flex items-center gap-2 px-3 py-1 rounded-lg bg-primary/10 border border-primary/20 text-[11px] text-primary font-semibold">
+            <span>⚡ ACID Database Protected</span>
+            <span className="text-muted-foreground">•</span>
+            <span>Zero Overwrite Risk</span>
+          </div>
+        </div>
       </div>
 
       {/* Main Viewport: Excel Table or Jira Kanban */}
       <div className="flex-1 overflow-auto p-4 md:p-6">
         
+        {/* Batch Action Bar */}
+        {selectedItemIds.length > 0 && (
+          <div className="bg-foreground text-background rounded-xl p-3 mb-4 shadow-xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="flex items-center gap-2">
+              <CheckCheck className="h-4 w-4 text-primary" />
+              <span className="text-xs font-bold">
+                {selectedItemIds.length} asset{selectedItemIds.length > 1 ? 's' : ''} selected
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={handleBatchAdvanceStage}
+                className="px-3 py-1.5 rounded-lg bg-background/20 hover:bg-background/30 text-xs font-semibold cursor-pointer transition"
+              >
+                ⏩ Advance Stage (+1 Tier)
+              </button>
+
+              <button
+                onClick={handleBatchToggleParallel}
+                className="px-3 py-1.5 rounded-lg bg-background/20 hover:bg-background/30 text-xs font-semibold cursor-pointer transition"
+              >
+                ⚡ Toggle Parallel Mode
+              </button>
+
+              <button
+                onClick={handleBatchApprove}
+                className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold cursor-pointer transition"
+              >
+                ✓ Bulk Approve
+              </button>
+
+              <button
+                onClick={() => setSelectedItemIds([])}
+                className="px-2.5 py-1.5 text-xs text-background/70 hover:text-background cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* MODE 1: EXCEL SPREADSHEET (Speed, Inline Editing, Frame.io Trigger) */}
         {viewMode === 'excel' && (
           <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
@@ -342,7 +613,16 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-muted/40 border-b border-border text-muted-foreground font-semibold">
-                    <th className="p-3 w-12 text-center">#</th>
+                    <th className="p-3 w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedItemIds.length === filteredItems.length && filteredItems.length > 0}
+                        onChange={toggleSelectAll}
+                        className="cursor-pointer rounded accent-primary"
+                        title="Select all visible assets"
+                      />
+                    </th>
+                    <th className="p-3 w-10 text-center">#</th>
                     <th className="p-3 min-w-[240px]">Work Item / Asset Title</th>
                     <th className="p-3 w-32">Type</th>
                     <th className="p-3 w-36">Status</th>
@@ -357,18 +637,29 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
                 <tbody className="divide-y divide-border/60 font-sans">
                   {filteredItems.length === 0 ? (
                     <tr>
-                      <td colSpan={10} className="p-8 text-center text-muted-foreground">
+                      <td colSpan={11} className="p-8 text-center text-muted-foreground">
                         No assets found matching the selected filters. Click "Add Asset" to start tracking.
                       </td>
                     </tr>
                   ) : (
                     filteredItems.map((item, idx) => {
                       const openRemarks = (item.remarks || []).filter(r => r.status === 'open').length;
+                      const firstOpenRemark = (item.remarks || []).find(r => r.status === 'open');
                       return (
                         <tr
                           key={item.id}
-                          className="hover:bg-muted/30 transition-colors group"
+                          className={`hover:bg-muted/30 transition-colors group ${
+                            selectedItemIds.includes(item.id) ? 'bg-primary/5' : ''
+                          }`}
                         >
+                          <td className="p-3 text-center">
+                            <input
+                              type="checkbox"
+                              checked={selectedItemIds.includes(item.id)}
+                              onChange={() => toggleSelectItem(item.id)}
+                              className="cursor-pointer rounded accent-primary"
+                            />
+                          </td>
                           <td className="p-3 text-center text-muted-foreground font-mono">
                             {idx + 1}
                           </td>
@@ -488,9 +779,13 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
                           {/* Open Remarks Badge */}
                           <td className="p-3 text-center">
                             {openRemarks > 0 ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-500 border border-red-500/20">
-                                🚨 {openRemarks} Open
-                              </span>
+                              <button
+                                onClick={() => setActiveReviewItem(item)}
+                                title={firstOpenRemark ? `Latest Remark: ${firstOpenRemark.timestamp_seconds ? `[${Math.floor(firstOpenRemark.timestamp_seconds / 60)}:${String(firstOpenRemark.timestamp_seconds % 60).padStart(2, '0')}] ` : ''}${firstOpenRemark.remark_text}` : `${openRemarks} open remarks`}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 transition-all cursor-pointer shadow-sm"
+                              >
+                                <span>🚨 {openRemarks} Open</span>
+                              </button>
                             ) : (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                                 ✓ Clean

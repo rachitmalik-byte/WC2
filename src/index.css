@@ -57,71 +57,71 @@
   html[data-font="lora"] { --font-sans: 'Lora', serif; }
   html[data-font="jetbrains-mono"] { --font-sans: 'JetBrains Mono', monospace; }
 
-  /* ==================== 1. CORPORATE (Default) ==================== */
+  /* ==================== 1. CALM CLEAN / BOTANICAL SAGE (Default) ==================== */
   html[data-theme-preset="corporate"] {
-    --background: 210 40% 98%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 160 15% 98.2%;
+    --foreground: 220 20% 14%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 20% 14%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 222.2 47.4% 11.2%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --success: 162.2 75.6% 41%;
-    --warning: 37.7 92.1% 50.2%;
-    --danger: 348.3 84.5% 60.2%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --popover-foreground: 220 20% 14%;
+    --primary: 168 78% 30%; /* Calm Deep Botanical Teal */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 160 15% 92.5%;
+    --secondary-foreground: 168 78% 22%;
+    --muted: 160 12% 95%;
+    --muted-foreground: 215 14% 44%;
+    --accent: 168 40% 93.5%;
+    --accent-foreground: 168 78% 22%;
+    --success: 152 70% 36%;
+    --warning: 38 92% 48%;
+    --danger: 350 78% 54%;
+    --border: 160 14% 88%;
+    --input: 160 14% 88%;
+    --ring: 168 78% 30%;
     
-    --radius-card: 0.5rem;
-    --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.08);
-    --shadow-card-hover: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+    --radius-card: 0.65rem;
+    --shadow-card: 0 1px 3px 0 rgba(15, 118, 110, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+    --shadow-card-hover: 0 10px 25px -5px rgba(15, 118, 110, 0.07), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
     --transform-card-hover: translateY(-2px);
     --border-card: 1px solid hsl(var(--border));
     --blur-card: none;
     --card-opacity: 1;
-    --svg-stroke: 2px;
+    --svg-stroke: 1.85px;
 
     /* Bubbles */
-    --chat-bubble-out: 221.2 83.2% 53.3%;
-    --chat-bubble-out-foreground: 210 40% 98%;
-    --chat-bubble-in: 210 40% 96.1%;
-    --chat-bubble-in-foreground: 222.2 84% 4.9%;
+    --chat-bubble-out: 168 78% 30%;
+    --chat-bubble-out-foreground: 0 0% 100%;
+    --chat-bubble-in: 160 12% 94%;
+    --chat-bubble-in-foreground: 220 20% 14%;
   }
   html[data-theme-preset="corporate"].dark {
-    --background: 222.2 47.4% 11.2%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 47.4% 8%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 47.4% 8%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --background: 170 18% 7.5%;
+    --foreground: 160 12% 94%;
+    --card: 170 18% 10.5%;
+    --card-foreground: 160 12% 94%;
+    --popover: 170 18% 10%;
+    --popover-foreground: 160 12% 94%;
+    --primary: 168 70% 42%;
+    --primary-foreground: 170 20% 6%;
+    --secondary: 170 16% 16%;
+    --secondary-foreground: 160 12% 94%;
+    --muted: 170 14% 15%;
+    --muted-foreground: 165 10% 65%;
+    --accent: 170 16% 17%;
+    --accent-foreground: 168 70% 45%;
+    --border: 170 14% 17%;
+    --input: 170 14% 17%;
+    --ring: 168 70% 42%;
 
-    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.15), 0 2px 4px -2px rgba(0, 0, 0, 0.15);
-    --shadow-card-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.25);
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+    --shadow-card-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.35), 0 8px 10px -6px rgba(0, 0, 0, 0.35);
 
     /* Bubbles */
-    --chat-bubble-out: 217.2 91.2% 59.8%;
-    --chat-bubble-out-foreground: 222.2 47.4% 11.2%;
-    --chat-bubble-in: 217.2 32.6% 17.5%;
-    --chat-bubble-in-foreground: 210 40% 98%;
+    --chat-bubble-out: 168 70% 42%;
+    --chat-bubble-out-foreground: 170 20% 6%;
+    --chat-bubble-in: 170 14% 15%;
+    --chat-bubble-in-foreground: 160 12% 94%;
   }
 
   /* ==================== 2. GLASSMORPHISM ==================== */

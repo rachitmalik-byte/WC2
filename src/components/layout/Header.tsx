@@ -80,7 +80,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, onToggl
     if (currentView === 'notes') return 'Workflow Scratchpad';
     if (currentView.startsWith('messaging')) return 'Messaging';
     if (currentView === 'settings') return 'Settings';
-    return 'RelayHQ';
+    return 'WC 2.0';
   };
 
   return (
