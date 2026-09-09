@@ -220,6 +220,22 @@ npm run dev
 
 ## 📝 Patch Notes & Changelog
 
+### Version 2.3.0 — *Calm Zen Executive Redesign & Cognitive Ergonomics*
+*Release Date: September 2026*
+
+#### 🌟 Visual & Cognitive Enhancements
+- **Title De-duplication Engine**: Automatically strips redundant chapter prefixes and track suffixes (e.g. converting `"Optics: 3D Animatic & Tech Rough Cut (L1)"` to a clean, focused `"3D Animatic & Tech Rough Cut"`).
+- **Executive 3px Left Accent Lines**: Replaced 4-sided high-contrast neon borders with sleek DAW/Linear-inspired left status accents:
+  - 🟢 **Emerald (`border-l-emerald-500`)**: Approved & delivered.
+  - 🔴 **Rose (`border-l-rose-500`)**: Critical blockers and corrections required.
+  - 🟡 **Amber (`border-l-amber-500`)**: Open remarks.
+  - 🔵 **Primary Indigo (`border-l-primary`)**: Review in progress.
+  - ⚪ **Muted Neutral**: Drafts in production.
+- **Quiet Status Indicators**: Eliminated the overwhelming "candy bubble pill soup" (48 pills per chapter); replaced with subtle, high-clarity status typography (`✓ Done`, `● 1 Blocker`, `● 2 Remarks`, `In Progress`).
+- **Linear-Style Unified Segmented Toolbar**: Converted speed filter buttons into a calm neutral segmented tray (`All`, `My Queue`, `Blockers`, `Parallel`, `In Review`, `Approved`).
+- **Integrated Mini Pod Segmented Progress Bars**: Removed intermediate redundant text banners; embedded clean progress segment indicators (`■■□□ 2/4`) directly into department pod headers.
+- **Optimized Team Threads Freeze Protection**: Completely resolved read-receipt state recursion and regex overhead in real-time messaging.
+
 ### Version 2.2.0 — *Team Threads Overhaul & Focus Mode Cockpit*
 *Release Date: September 2026*
 
