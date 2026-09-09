@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import type { ProjectClass, WorkItem, AssetType, WorkItemStatus } from '../../types/database';
+import type { 
+  ProjectClass, WorkItem, AssetType, WorkItemStatus,
+  Chapter, ClientCommunication, ChapterTrack 
+} from '../../types/database';
 import { dbClient } from '../../services/dbClient';
 import { useAuth } from '../../context/AuthContext';
 import { ReviewDrawer } from '../../components/ui/ReviewDrawer';
 import {
   Layers, Table, Kanban, Plus, Search, Video, Mic, CheckSquare,
-  FileText, ExternalLink, Download, CheckCheck, Sparkles
+  FileText, ExternalLink, Download, CheckCheck, Sparkles,
+  FolderTree, Lock, Send, UserCheck, MessageSquare,
+  Shield, Check
 } from 'lucide-react';
 
 interface ClassesViewProps {
@@ -15,10 +20,15 @@ interface ClassesViewProps {
 export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigate }) => {
   const { currentUser, profiles } = useAuth();
 
+  const isPrivilegedRole = currentUser?.role === 'client' || currentUser?.role === 'head' || currentUser?.email?.toLowerCase().includes('ashish.garg');
+  const isClientUser = currentUser?.role === 'client';
+
   const [classes, setClasses] = useState<ProjectClass[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<string>('all');
   const [workItems, setWorkItems] = useState<WorkItem[]>([]);
-  const [viewMode, setViewMode] = useState<'excel' | 'kanban'>('excel');
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [clientComms, setClientComms] = useState<ClientCommunication[]>([]);
+  const [viewMode, setViewMode] = useState<'excel' | 'kanban' | 'chapters'>('chapters');
   const [searchQuery, setSearchQuery] = useState('');
   const [assetTypeFilter, setAssetTypeFilter] = useState<string>('all');
   const [roleQueueFilter, setRoleQueueFilter] = useState<string>('all');
@@ -28,6 +38,25 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
 
   // Selected item for Frame.io style Review Drawer
   const [activeReviewItem, setActiveReviewItem] = useState<WorkItem | null>(null);
+
+  // Client Direct Hub Modal
+  const [showClientHub, setShowClientHub] = useState(false);
+  const [activeCommTab, setActiveCommTab] = useState<'directives' | 'new_directive'>('directives');
+
+  // Discreet Reassignment Dialog
+  const [activeReassignComm, setActiveReassignComm] = useState<ClientCommunication | null>(null);
+  const [reassignTargetItemId, setReassignTargetItemId] = useState<string>('');
+  const [reassignNewAssigneeId, setReassignNewAssigneeId] = useState<string>('');
+  const [reassignSanitizedBriefing, setReassignSanitizedBriefing] = useState<string>('');
+  const [isExecutingReassign, setIsExecutingReassign] = useState<boolean>(false);
+
+  // New Client Directive Form
+  const [newCommTitle, setNewCommTitle] = useState('');
+  const [newCommMessage, setNewCommMessage] = useState('');
+  const [newCommType, setNewCommType] = useState<ClientCommunication['type']>('reassignment_request');
+  const [newCommTargetTrack, setNewCommTargetTrack] = useState<ChapterTrack>('video_l2');
+  const [newCommSuggestedAssignee, setNewCommSuggestedAssignee] = useState('');
+  const [isSubmittingComm, setIsSubmittingComm] = useState(false);
 
   // New Work Item Modal
   const [isCreatingItem, setIsCreatingItem] = useState(false);
@@ -46,7 +75,7 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
   const [newClassCategory, setNewClassCategory] = useState<ProjectClass['category']>('Class Course');
   const [newClassDesc, setNewClassDesc] = useState('');
 
-  // Load classes and work items
+  // Load classes, chapters, and work items
   const loadData = async () => {
     try {
       const cls = await dbClient.getProjectClasses();
@@ -57,6 +86,14 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
 
       const items = await dbClient.getWorkItems(selectedClassId);
       setWorkItems(items);
+
+      const chaps = await dbClient.getChapters(selectedClassId);
+      setChapters(chaps);
+
+      if (isPrivilegedRole) {
+        const comms = await dbClient.getClientCommunications(selectedClassId);
+        setClientComms(comms);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -65,7 +102,7 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
   useEffect(() => {
     loadData();
     const unsub = dbClient.subscribe((table) => {
-      if (table === 'work_items' || table === 'project_classes') {
+      if (table === 'work_items' || table === 'project_classes' || table === 'chapters' || table === 'client_communications') {
         loadData();
       }
     });
@@ -350,8 +387,19 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
 
           {/* Quick Action Buttons */}
           <div className="flex items-center gap-2 flex-wrap">
-            {/* View Switcher: Excel Table vs Jira Kanban */}
+            {/* View Switcher: Chapters Hierarchy vs Excel Table vs Jira Kanban */}
             <div className="flex items-center bg-muted/60 p-1 rounded-xl border border-border">
+              <button
+                onClick={() => setViewMode('chapters')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                  viewMode === 'chapters'
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <FolderTree className="h-3.5 w-3.5 text-primary" />
+                Chapter Hierarchy
+              </button>
               <button
                 onClick={() => setViewMode('excel')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
@@ -375,6 +423,23 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
                 Pipeline (Jira)
               </button>
             </div>
+
+            {/* Confidential Client Direct Channel (Restricted to Client, Head of IXR, CEO) */}
+            {isPrivilegedRole && (
+              <button
+                onClick={() => setShowClientHub(true)}
+                className="px-3.5 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-sm relative"
+                title="Confidential communication channel between Client Representative, Head of IXR, and CEO."
+              >
+                <Lock className="h-3.5 w-3.5 text-amber-600" />
+                <span>Client Direct Hub</span>
+                {clientComms.filter(c => c.status === 'pending').length > 0 && (
+                  <span className="h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center animate-pulse">
+                    {clientComms.filter(c => c.status === 'pending').length}
+                  </span>
+                )}
+              </button>
+            )}
 
             <button
               onClick={() => setIsCreatingClass(true)}
@@ -877,6 +942,227 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
             })}
           </div>
         )}
+
+        {/* MODE 3: CHAPTER HIERARCHY MATRIX (Script, Video L1-L4, Audio L1-L2, Quiz Gen/Rev/Impl/Test, HB Review) */}
+        {viewMode === 'chapters' && (
+          <div className="space-y-6">
+            {chapters.length === 0 ? (
+              <div className="bg-card border border-border rounded-2xl p-12 text-center text-muted-foreground">
+                <FolderTree className="h-10 w-10 mx-auto mb-3 opacity-40 text-primary" />
+                <h3 className="text-sm font-bold text-foreground">No Chapters Found</h3>
+                <p className="text-xs mt-1">Select an active class project from the top filter or initialize chapter tracks.</p>
+              </div>
+            ) : (
+              chapters.map(chapter => {
+                const chapterItems = workItems.filter(i => i.chapter_id === chapter.id);
+                const approvedCount = chapterItems.filter(i => i.status === 'approved' || i.status === 'delivered').length;
+                const totalTracks = 12; // 1 Script + 4 Video + 2 Audio + 4 Quiz + 1 HB
+                const progressPct = chapterItems.length > 0 ? Math.round((approvedCount / Math.max(chapterItems.length, totalTracks)) * 100) : 0;
+
+                // Track extractors
+                const scriptItem = chapterItems.find(i => i.chapter_track === 'script');
+                const vidL1 = chapterItems.find(i => i.chapter_track === 'video_l1');
+                const vidL2 = chapterItems.find(i => i.chapter_track === 'video_l2');
+                const vidL3 = chapterItems.find(i => i.chapter_track === 'video_l3');
+                const vidL4 = chapterItems.find(i => i.chapter_track === 'video_l4');
+                const audL1 = chapterItems.find(i => i.chapter_track === 'audio_l1');
+                const audL2 = chapterItems.find(i => i.chapter_track === 'audio_l2');
+                const quizGen = chapterItems.find(i => i.chapter_track === 'quiz_generation');
+                const quizRev = chapterItems.find(i => i.chapter_track === 'quiz_review');
+                const quizImp = chapterItems.find(i => i.chapter_track === 'quiz_implementation');
+                const quizTest = chapterItems.find(i => i.chapter_track === 'quiz_testing');
+                const hbItem = chapterItems.find(i => i.chapter_track === 'hb_review');
+
+                // Render track card helper
+                const renderTrackNode = (label: string, item?: WorkItem, badgeColor = 'bg-primary/10 text-primary border-primary/20') => {
+                  if (!item) {
+                    return (
+                      <div className="p-3 rounded-xl border border-dashed border-border/80 bg-muted/20 flex flex-col justify-between min-h-[110px]">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-muted-foreground">{label}</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Unscheduled</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground/70 italic mt-2">Awaiting queue instantiation</p>
+                      </div>
+                    );
+                  }
+
+                  const openRemarks = (item.remarks || []).filter(r => r.status === 'open').length;
+                  const hasBlocker = (item.remarks || []).some(r => r.status === 'open' && (r.severity === 'blocker' || r.severity === 'correction'));
+                  const hasConfidentialRemark = isPrivilegedRole && (item.remarks || []).some(r => r.is_confidential && r.status === 'open');
+
+                  return (
+                    <div
+                      onClick={() => setActiveReviewItem(item)}
+                      className={`p-3 rounded-xl border transition-all cursor-pointer shadow-xs hover:shadow-md flex flex-col justify-between min-h-[115px] group ${
+                        item.status === 'approved'
+                          ? 'bg-emerald-500/[0.04] border-emerald-500/30 hover:border-emerald-500'
+                          : item.status === 'review_in_progress'
+                          ? 'bg-purple-500/[0.04] border-purple-500/30 hover:border-purple-500'
+                          : 'bg-card border-border hover:border-primary'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${badgeColor}`}>
+                            {label}
+                          </span>
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                            item.status === 'approved' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
+                            item.status === 'review_in_progress' ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400' :
+                            'bg-blue-500/15 text-blue-600 dark:text-blue-400'
+                          }`}>
+                            {item.status === 'approved' ? '✓ Approved' : item.current_review_stage || item.status}
+                          </span>
+                        </div>
+                        <h5 className="text-[11px] font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                          {item.title}
+                        </h5>
+                      </div>
+
+                      <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[10px] mt-2">
+                        <div className="flex items-center gap-1 min-w-0">
+                          <span className="h-4.5 w-4.5 rounded-full bg-primary/20 text-primary font-bold text-[8px] flex items-center justify-center shrink-0">
+                            {getProfileName(item.assignee_ids[0]).slice(0, 2).toUpperCase()}
+                          </span>
+                          <span className="truncate text-muted-foreground text-[10px]">
+                            {getProfileName(item.assignee_ids[0]).split(' ')[0]}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          {hasConfidentialRemark && (
+                            <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-600 font-bold border border-amber-500/30" title="Confidential Client note exists on this asset">
+                              🔒
+                            </span>
+                          )}
+                          {openRemarks > 0 ? (
+                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                              hasBlocker ? 'bg-red-500/20 text-red-500' : 'bg-amber-500/20 text-amber-600'
+                            }`}>
+                              {openRemarks} open
+                            </span>
+                          ) : (
+                            <span className="text-emerald-500 font-bold text-[9px]">v{item.latest_version_number}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                };
+
+                return (
+                  <div key={chapter.id} className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
+                    {/* Chapter Header Banner */}
+                    <div className="p-4 md:p-5 bg-muted/30 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-primary text-primary-foreground">
+                            Chapter {String(chapter.chapter_number).padStart(2, '0')}
+                          </span>
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
+                            chapter.status === 'completed' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
+                            chapter.status === 'in_progress' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' :
+                            'bg-muted text-muted-foreground border-border'
+                          }`}>
+                            {chapter.status.toUpperCase()}
+                          </span>
+                          {chapter.target_date && (
+                            <span className="text-xs text-muted-foreground font-medium">
+                              Target Delivery: {new Date(chapter.target_date).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="text-base font-bold text-foreground">{chapter.title}</h3>
+                        <p className="text-xs text-muted-foreground max-w-3xl mt-0.5">{chapter.description}</p>
+                      </div>
+
+                      {/* Progress Gauge */}
+                      <div className="flex flex-col md:items-end gap-1.5 shrink-0">
+                        <div className="flex items-center gap-2 text-xs font-bold">
+                          <span className="text-muted-foreground">Course Milestone Progress:</span>
+                          <span className="text-primary">{approvedCount}/{chapterItems.length} Tracks Cleared</span>
+                          <span className="px-2 py-0.5 rounded bg-primary/10 text-primary">{progressPct}%</span>
+                        </div>
+                        <div className="w-44 h-2 bg-muted rounded-full overflow-hidden border border-border">
+                          <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${progressPct}%` }} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Chapter Tracks Matrix */}
+                    <div className="p-4 md:p-6 space-y-6">
+                      
+                      {/* Top Row: Script & HB Review Bookends */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/15 p-3 rounded-xl border border-border/60">
+                        <div>
+                          <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <FileText className="h-3.5 w-3.5 text-amber-500" />
+                            <span>1. Script & Pedagogical Baseline</span>
+                          </div>
+                          {renderTrackNode('Script Draft', scriptItem, 'bg-amber-500/10 text-amber-600 border-amber-500/30')}
+                        </div>
+
+                        <div>
+                          <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <Shield className="h-3.5 w-3.5 text-indigo-500" />
+                            <span>5. HB Review (Final Director Clearance)</span>
+                          </div>
+                          {renderTrackNode('HB Final Clearance', hbItem, 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30')}
+                        </div>
+                      </div>
+
+                      {/* Video Production Track: L1 -> L2 -> L3 -> L4 */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="text-[11px] font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                            <Video className="h-3.5 w-3.5 text-blue-500" />
+                            <span>2. Video Multi-Level Track (L1 → L2 → L3 → L4)</span>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground font-medium">Sequential or parallel review staging</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                          {renderTrackNode('Video: L1 (Tech QC)', vidL1, 'bg-blue-500/10 text-blue-500 border-blue-500/20')}
+                          {renderTrackNode('Video: L2 (3D Motion)', vidL2, 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20')}
+                          {renderTrackNode('Video: L3 (Fine Polish)', vidL3, 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20')}
+                          {renderTrackNode('Video: L4 (4K Master)', vidL4, 'bg-purple-500/10 text-purple-500 border-purple-500/20')}
+                        </div>
+                      </div>
+
+                      {/* Audio & Sound Track: L1 -> L2 */}
+                      <div className="space-y-2">
+                        <div className="text-[11px] font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                          <Mic className="h-3.5 w-3.5 text-purple-500" />
+                          <span>3. Audio & Voiceover Track (L1 → L2)</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {renderTrackNode('Audio: L1 (Voiceover EQ)', audL1, 'bg-purple-500/10 text-purple-500 border-purple-500/20')}
+                          {renderTrackNode('Audio: L2 (SFX & Ambience)', audL2, 'bg-fuchsia-500/10 text-fuchsia-500 border-fuchsia-500/20')}
+                        </div>
+                      </div>
+
+                      {/* Interactive Quiz Track: Generation -> Review -> Implementation -> Testing */}
+                      <div className="space-y-2">
+                        <div className="text-[11px] font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                          <CheckSquare className="h-3.5 w-3.5 text-emerald-500" />
+                          <span>4. Interactive Quiz Track (Generation → Review → Implementation → Testing)</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                          {renderTrackNode('Quiz: Generation', quizGen, 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20')}
+                          {renderTrackNode('Quiz: Review', quizRev, 'bg-teal-500/10 text-teal-600 border-teal-500/20')}
+                          {renderTrackNode('Quiz: Implementation', quizImp, 'bg-amber-500/10 text-amber-600 border-amber-500/20')}
+                          {renderTrackNode('Quiz: Testing QA', quizTest, 'bg-rose-500/10 text-rose-600 border-rose-500/20')}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
       </div>
 
       {/* Frame.io Style Asset Review Drawer Modal */}
@@ -1104,6 +1390,360 @@ export const ClassesView: React.FC<ClassesViewProps> = ({ onNavigate: _onNavigat
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Confidential Client Direct Hub Modal */}
+      {showClientHub && isPrivilegedRole && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-card border border-border rounded-2xl max-w-2xl w-full flex flex-col max-h-[85vh] shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-4 border-b border-border bg-amber-500/10 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="p-2 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                  <Lock className="h-4 w-4" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <span>Confidential Client Direct Hub</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                      Restricted Access
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground">
+                    Private channel between Client Representative, Head of IXR, and CEO. Strictly hidden from production team.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowClientHub(false);
+                  setActiveReassignComm(null);
+                }}
+                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Navigation Tabs */}
+            <div className="flex border-b border-border px-4 bg-muted/20 text-xs font-semibold">
+              <button
+                onClick={() => setActiveCommTab('directives')}
+                className={`py-2.5 px-3 border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
+                  activeCommTab === 'directives' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <MessageSquare className="h-3.5 w-3.5" />
+                Directives & Reassignments ({clientComms.length})
+              </button>
+              <button
+                onClick={() => setActiveCommTab('new_directive')}
+                className={`py-2.5 px-3 border-b-2 transition cursor-pointer flex items-center gap-1.5 ${
+                  activeCommTab === 'new_directive' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Send className="h-3.5 w-3.5" />
+                {isClientUser ? 'Issue Direct Client Directive' : 'Log Private Executive Note'}
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-4 overflow-y-auto flex-1 space-y-4 text-xs">
+              {activeCommTab === 'directives' && (
+                <div className="space-y-3">
+                  {clientComms.length === 0 ? (
+                    <div className="text-center py-10 text-muted-foreground">
+                      No confidential directives logged for this project.
+                    </div>
+                  ) : (
+                    clientComms.map((comm) => {
+                      const isPending = comm.status === 'pending';
+                      const targetWorkItem = workItems.find(i => i.id === comm.work_item_id) || workItems.find(i => i.chapter_track === comm.target_track);
+                      return (
+                        <div
+                          key={comm.id}
+                          className={`p-4 rounded-xl border transition-all ${
+                            isPending
+                              ? 'bg-card border-amber-500/40 shadow-xs'
+                              : 'bg-muted/20 border-border opacity-75'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-1.5">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                                comm.type === 'reassignment_request' ? 'bg-red-500/15 text-red-500 border border-red-500/30' :
+                                comm.type === 'scope_alert' ? 'bg-amber-500/15 text-amber-600 border border-amber-500/30' :
+                                'bg-blue-500/15 text-blue-500 border border-blue-500/30'
+                              }`}>
+                                {comm.type.replace(/_/g, ' ')}
+                              </span>
+                              <span className="font-semibold text-foreground text-xs">{comm.title}</span>
+                            </div>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              isPending ? 'bg-amber-500/20 text-amber-600' : 'bg-emerald-500/20 text-emerald-600'
+                            }`}>
+                              {comm.status.toUpperCase()}
+                            </span>
+                          </div>
+
+                          <p className="text-xs text-muted-foreground my-2 leading-relaxed bg-muted/40 p-2.5 rounded-lg border border-border/50">
+                            "{comm.message}"
+                          </p>
+
+                          <div className="flex items-center justify-between text-[11px] text-muted-foreground flex-wrap gap-2 pt-1">
+                            <span>From: <strong className="text-foreground">{getProfileName(comm.sender_id)}</strong></span>
+                            <span>{new Date(comm.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {new Date(comm.created_at).toLocaleDateString()}</span>
+                          </div>
+
+                          {/* Actioning area for Head of IXR and CEO */}
+                          {isPending && !isClientUser && (
+                            <div className="mt-3 pt-3 border-t border-border flex items-center justify-end gap-2">
+                              {comm.type === 'reassignment_request' && targetWorkItem && (
+                                <button
+                                  onClick={() => {
+                                    setActiveReassignComm(comm);
+                                    setReassignTargetItemId(targetWorkItem.id);
+                                    setReassignNewAssigneeId(comm.suggested_assignee_id || 'video-ed-1');
+                                    setReassignSanitizedBriefing('Priority pacing alignment and chapter milestone timeline balancing.');
+                                  }}
+                                  className="px-3 py-1.5 bg-primary text-primary-foreground text-xs font-bold rounded-lg hover:bg-primary/90 transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                                >
+                                  <UserCheck className="h-3.5 w-3.5" />
+                                  Discreetly Apply Reassignment
+                                </button>
+                              )}
+                              <button
+                                onClick={async () => {
+                                  await dbClient.actionClientCommunication(comm.id, 'Acknowledged and integrated into operational plan.');
+                                  loadData();
+                                }}
+                                className="px-3 py-1.5 bg-card border border-border text-foreground text-xs font-semibold rounded-lg hover:bg-muted transition cursor-pointer"
+                              >
+                                Mark Actioned
+                              </button>
+                            </div>
+                          )}
+
+                          {comm.action_notes && (
+                            <div className="mt-2 text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 p-2 rounded border border-emerald-500/20 font-medium">
+                              ✓ {comm.action_notes}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+
+              {/* TAB 2: SEND CONFIDENTIAL DIRECTIVE FORM */}
+              {activeCommTab === 'new_directive' && (
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!newCommTitle.trim() || !newCommMessage.trim() || !currentUser) return;
+                    setIsSubmittingComm(true);
+                    try {
+                      await dbClient.createClientCommunication({
+                        project_id: selectedClassId !== 'all' ? selectedClassId : 'class-1',
+                        chapter_id: chapters[0]?.id || 'chap-10-01',
+                        sender_id: currentUser.id,
+                        sender_role: currentUser.role === 'client' ? 'client' : 'head',
+                        recipient_roles: ['head'],
+                        type: newCommType,
+                        title: newCommTitle.trim(),
+                        message: newCommMessage.trim(),
+                        target_track: newCommTargetTrack,
+                        suggested_assignee_id: newCommSuggestedAssignee || undefined,
+                        is_confidential: true
+                      });
+                      setNewCommTitle('');
+                      setNewCommMessage('');
+                      setActiveCommTab('directives');
+                      loadData();
+                    } catch (err) {
+                      console.error(err);
+                    } finally {
+                      setIsSubmittingComm(false);
+                    }
+                  }}
+                  className="space-y-3"
+                >
+                  <div>
+                    <label className="font-semibold text-muted-foreground mb-1 block">Directive Type</label>
+                    <select
+                      value={newCommType}
+                      onChange={(e) => setNewCommType(e.target.value as any)}
+                      className="w-full bg-muted border border-border rounded-lg p-2 text-foreground cursor-pointer"
+                    >
+                      <option value="reassignment_request">Direct Team Reassignment Request</option>
+                      <option value="private_directive">Confidential Artistic / Pedagogy Directive</option>
+                      <option value="scope_alert">Schedule / Scope Acceleration Notice</option>
+                      <option value="budget_sla">Commercial / SLA Milestone Requirement</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="font-semibold text-muted-foreground mb-1 block">Directive Title</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Reassign Video L2 track for Chapter 1"
+                      value={newCommTitle}
+                      onChange={(e) => setNewCommTitle(e.target.value)}
+                      className="w-full bg-muted border border-border rounded-lg p-2 text-foreground focus:outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-semibold text-muted-foreground mb-1 block">Target Chapter Track</label>
+                      <select
+                        value={newCommTargetTrack}
+                        onChange={(e) => setNewCommTargetTrack(e.target.value as any)}
+                        className="w-full bg-muted border border-border rounded-lg p-2 text-foreground cursor-pointer"
+                      >
+                        <option value="script">Script</option>
+                        <option value="video_l1">Video L1 (Tech QC)</option>
+                        <option value="video_l2">Video L2 (3D Motion)</option>
+                        <option value="video_l3">Video L3 (Fine Polish)</option>
+                        <option value="video_l4">Video L4 (4K Master)</option>
+                        <option value="audio_l1">Audio L1 (Voiceover)</option>
+                        <option value="audio_l2">Audio L2 (SFX Mix)</option>
+                        <option value="quiz_generation">Quiz Generation</option>
+                        <option value="quiz_implementation">Quiz Implementation</option>
+                        <option value="quiz_testing">Quiz Testing</option>
+                        <option value="hb_review">HB Review</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-muted-foreground mb-1 block">Suggested Replacement (Optional)</label>
+                      <select
+                        value={newCommSuggestedAssignee}
+                        onChange={(e) => setNewCommSuggestedAssignee(e.target.value)}
+                        className="w-full bg-muted border border-border rounded-lg p-2 text-foreground cursor-pointer"
+                      >
+                        <option value="">No preference / Head decision</option>
+                        {profiles.filter(p => p.role !== 'client').map(p => (
+                          <option key={p.id} value={p.id}>{p.full_name} ({p.designation || p.role})</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="font-semibold text-muted-foreground mb-1 block">
+                      Confidential Directive Message
+                    </label>
+                    <textarea
+                      rows={3}
+                      required
+                      placeholder="Explain the confidential reasoning (this will strictly stay between Client, Head of IXR, and CEO)..."
+                      value={newCommMessage}
+                      onChange={(e) => setNewCommMessage(e.target.value)}
+                      className="w-full bg-muted border border-border rounded-lg p-2.5 text-foreground focus:outline-none focus:border-primary resize-none"
+                    />
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="submit"
+                      disabled={isSubmittingComm}
+                      className="px-4 py-2 rounded-xl bg-primary text-primary-foreground font-bold hover:bg-primary/90 transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+                    >
+                      <Send className="h-3.5 w-3.5" /> Submit Confidential Directive
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Discreet Reassignment Dialog for Head of IXR */}
+      {activeReassignComm && (
+        <div className="fixed inset-0 z-60 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in zoom-in-95 duration-150">
+          <div className="bg-card border border-border rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                <UserCheck className="h-4 w-4 text-primary" />
+                <span>Discreet Role Reassignment</span>
+              </h3>
+              <button
+                onClick={() => setActiveReassignComm(null)}
+                className="text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Executing client directive: <strong className="text-foreground">{activeReassignComm.title}</strong>.
+              The new assignee will receive a polite, sanitized briefing. The previous specialist will not be exposed to confidential complaints.
+            </p>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="font-semibold text-muted-foreground mb-1 block">New Assignee Specialist</label>
+                <select
+                  value={reassignNewAssigneeId}
+                  onChange={(e) => setReassignNewAssigneeId(e.target.value)}
+                  className="w-full bg-muted border border-border rounded-lg p-2 text-foreground cursor-pointer"
+                >
+                  {profiles.filter(p => p.role !== 'client').map(p => (
+                    <option key={p.id} value={p.id}>{p.full_name} · {p.designation || p.role}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="font-semibold text-muted-foreground mb-1 block">Sanitized Handover Briefing (Visible to Team)</label>
+                <textarea
+                  rows={2}
+                  value={reassignSanitizedBriefing}
+                  onChange={(e) => setReassignSanitizedBriefing(e.target.value)}
+                  className="w-full bg-muted border border-border rounded-lg p-2 text-foreground focus:outline-none focus:border-primary resize-none"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveReassignComm(null)}
+                  className="px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isExecutingReassign}
+                  onClick={async () => {
+                    setIsExecutingReassign(true);
+                    try {
+                      await dbClient.discreetReassign(
+                        reassignTargetItemId,
+                        reassignNewAssigneeId,
+                        reassignSanitizedBriefing,
+                        activeReassignComm.id
+                      );
+                      setActiveReassignComm(null);
+                      loadData();
+                    } catch (err) {
+                      console.error(err);
+                    } finally {
+                      setIsExecutingReassign(false);
+                    }
+                  }}
+                  className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold hover:bg-primary/90 transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+                >
+                  <Check className="h-3.5 w-3.5" /> Execute Reassignment
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

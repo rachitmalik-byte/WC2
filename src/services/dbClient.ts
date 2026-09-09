@@ -2,7 +2,7 @@ import { mockDb } from './mockDb';
 import { supabase } from './supabase';
 import type { 
   Profile, Lead, LeadUpdate, LeadAttachment, Task, Reminder, Channel, Message, Notification, PersonalNote,
-  ProjectClass, WorkItem, ReviewRemark, AssetVersion, HandoverLog
+  ProjectClass, WorkItem, ReviewRemark, AssetVersion, HandoverLog, Chapter, ClientCommunication
 } from '../types/database';
 
 class DBClient {
@@ -1153,6 +1153,61 @@ class DBClient {
 
   async executeRoleHandoff(itemId: string, fromUserId: string, toUserId: string, briefingNotes: string, reason: string): Promise<HandoverLog> {
     return mockDb.executeRoleHandoff(itemId, fromUserId, toUserId, briefingNotes, reason);
+  }
+
+  // Chapter Operations
+  async getChapters(projectId?: string): Promise<Chapter[]> {
+    const client = this.getClient();
+    if (!client) return mockDb.getChapters(projectId);
+    try {
+      let query = client.from('chapters').select('*');
+      if (projectId && projectId !== 'all') {
+        query = query.eq('project_id', projectId);
+      }
+      const { data, error } = await query.order('chapter_number', { ascending: true });
+      if (error || !data) return mockDb.getChapters(projectId);
+      return data;
+    } catch {
+      return mockDb.getChapters(projectId);
+    }
+  }
+
+  async createChapter(chapterData: Omit<Chapter, 'id' | 'created_at' | 'updated_at'>): Promise<Chapter> {
+    return mockDb.createChapter(chapterData);
+  }
+
+  // Client Direct & Confidential Communications
+  async getClientCommunications(projectId?: string): Promise<ClientCommunication[]> {
+    const client = this.getClient();
+    if (!client) return mockDb.getClientCommunications(projectId);
+    try {
+      let query = client.from('client_communications').select('*');
+      if (projectId && projectId !== 'all') {
+        query = query.eq('project_id', projectId);
+      }
+      const { data, error } = await query.order('created_at', { ascending: false });
+      if (error || !data) return mockDb.getClientCommunications(projectId);
+      return data;
+    } catch {
+      return mockDb.getClientCommunications(projectId);
+    }
+  }
+
+  async createClientCommunication(data: Omit<ClientCommunication, 'id' | 'created_at' | 'updated_at' | 'status'>): Promise<ClientCommunication> {
+    return mockDb.createClientCommunication(data);
+  }
+
+  async actionClientCommunication(commId: string, actionNotes: string): Promise<ClientCommunication> {
+    return mockDb.actionClientCommunication(commId, actionNotes);
+  }
+
+  async discreetReassign(
+    itemId: string,
+    newAssigneeId: string,
+    sanitizedBriefing: string,
+    commId?: string
+  ): Promise<{ workItem: WorkItem; handover: HandoverLog }> {
+    return mockDb.discreetReassign(itemId, newAssigneeId, sanitizedBriefing, commId);
   }
 }
 

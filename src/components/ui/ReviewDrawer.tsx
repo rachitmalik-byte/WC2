@@ -4,7 +4,7 @@ import { dbClient } from '../../services/dbClient';
 import { useAuth } from '../../context/AuthContext';
 import {
   X, Clock, MessageSquare, ArrowRight,
-  Upload, ExternalLink, ShieldCheck, Sparkles, FileText, Check
+  Upload, ExternalLink, ShieldCheck, Sparkles, FileText, Check, Lock, Eye
 } from 'lucide-react';
 
 interface ReviewDrawerProps {
@@ -16,6 +16,8 @@ interface ReviewDrawerProps {
 export const ReviewDrawer: React.FC<ReviewDrawerProps> = ({ item, onClose, onItemUpdated }) => {
   const { currentUser, profiles } = useAuth();
 
+  const isPrivilegedRole = currentUser?.role === 'client' || currentUser?.role === 'head' || currentUser?.email?.toLowerCase().includes('ashish.garg');
+
   const [activeTab, setActiveTab] = useState<'review' | 'versions' | 'handoff' | 'instructions'>('review');
   const [selectedVersion, setSelectedVersion] = useState<number>(item.latest_version_number || 1);
 
@@ -26,6 +28,7 @@ export const ReviewDrawer: React.FC<ReviewDrawerProps> = ({ item, onClose, onIte
   const [timestampSeconds, setTimestampSeconds] = useState('');
   const [severity, setSeverity] = useState<ReviewSeverity>('correction');
   const [reviewStage, setReviewStage] = useState<string>(item.current_review_stage || 'L1');
+  const [isConfidentialRemark, setIsConfidentialRemark] = useState<boolean>(currentUser?.role === 'client');
   const [isSubmittingRemark, setIsSubmittingRemark] = useState(false);
 
   // New Version form state
@@ -45,8 +48,18 @@ export const ReviewDrawer: React.FC<ReviewDrawerProps> = ({ item, onClose, onIte
   };
 
   const currentVersionObj = (item.versions || []).find(v => v.version_number === selectedVersion) || (item.versions || [])[0];
-  const remarksForCurrentVer = (item.remarks || []).filter(r => r.version_number === selectedVersion);
-  const openRemarksCount = (item.remarks || []).filter(r => r.status === 'open').length;
+  
+  // Filter remarks: confidential remarks are strictly hidden from non-privileged team members (editors, testers)
+  const remarksForCurrentVer = (item.remarks || [])
+    .filter(r => r.version_number === selectedVersion)
+    .filter(r => {
+      if (r.is_confidential) {
+        return isPrivilegedRole;
+      }
+      return true;
+    });
+
+  const openRemarksCount = remarksForCurrentVer.filter(r => r.status === 'open').length;
 
   // Handle adding a new timestamped / target remark
   const handleAddRemark = async (e: React.FormEvent) => {
@@ -70,7 +83,8 @@ export const ReviewDrawer: React.FC<ReviewDrawerProps> = ({ item, onClose, onIte
         remark_text: remarkText.trim(),
         severity,
         status: 'open',
-        author_id: currentUser.id
+        author_id: currentUser.id,
+        is_confidential: isPrivilegedRole ? isConfidentialRemark : false
       });
 
       const updatedRemarks = [...(item.remarks || []), newRemark];
@@ -86,6 +100,24 @@ export const ReviewDrawer: React.FC<ReviewDrawerProps> = ({ item, onClose, onIte
       console.error('Error adding remark:', err);
     } finally {
       setIsSubmittingRemark(false);
+    }
+  };
+
+  // Convert confidential remark into public team remark (sanitized)
+  const handleMakeRemarkPublic = async (remarkId: string) => {
+    if (!currentUser) return;
+    try {
+      const updatedRemarks = (item.remarks || []).map(r => {
+        if (r.id === remarkId) {
+          return { ...r, is_confidential: false };
+        }
+        return r;
+      });
+      const updatedItem = { ...item, remarks: updatedRemarks };
+      await dbClient.updateWorkItem(item.id, { remarks: updatedRemarks } as any, currentUser.id);
+      onItemUpdated(updatedItem);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -397,6 +429,22 @@ export const ReviewDrawer: React.FC<ReviewDrawerProps> = ({ item, onClose, onIte
                     <Sparkles className="h-3.5 w-3.5 text-primary" /> Add Timestamped / Section Remark
                   </span>
                   <div className="flex items-center gap-2">
+                    {isPrivilegedRole && (
+                      <button
+                        type="button"
+                        onClick={() => setIsConfidentialRemark(!isConfidentialRemark)}
+                        className={`text-[10px] font-bold px-2 py-1 rounded border flex items-center gap-1 cursor-pointer transition-colors ${
+                          isConfidentialRemark
+                            ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                            : 'bg-muted/50 text-muted-foreground border-border hover:text-foreground'
+                        }`}
+                        title="When enabled, this remark is strictly hidden from production editors and only visible to Client, Head, and CEO."
+                      >
+                        <Lock className="h-2.5 w-2.5" />
+                        {isConfidentialRemark ? '🔒 Client/Leads Only' : '👥 Team Public'}
+                      </button>
+                    )}
+
                     <select
                       value={reviewStage}
                       onChange={(e) => setReviewStage(e.target.value)}
@@ -535,6 +583,23 @@ export const ReviewDrawer: React.FC<ReviewDrawerProps> = ({ item, onClose, onIte
                                 <span className="font-medium text-[10px] px-1.5 py-0.5 rounded bg-muted text-foreground border border-border">
                                   📌 {remark.target_ref}
                                 </span>
+                              )}
+
+                              {remark.is_confidential && (
+                                <span className="font-bold text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                                  <Lock className="h-2.5 w-2.5" /> Confidential
+                                </span>
+                              )}
+
+                              {isPrivilegedRole && remark.is_confidential && !isResolved && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleMakeRemarkPublic(remark.id)}
+                                  className="text-[10px] text-primary hover:underline flex items-center gap-1 font-semibold ml-auto cursor-pointer"
+                                  title="Convert to public team remark so editors can see this note"
+                                >
+                                  <Eye className="h-2.5 w-2.5" /> Make Team Public
+                                </button>
                               )}
                             </div>
 

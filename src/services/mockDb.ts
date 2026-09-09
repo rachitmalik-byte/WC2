@@ -1,6 +1,6 @@
 import type { 
   Profile, Lead, LeadUpdate, LeadAttachment, Task, Reminder, Channel, Message, Notification, PersonalNote,
-  ProjectClass, WorkItem, ReviewRemark, AssetVersion, HandoverLog
+  ProjectClass, WorkItem, ReviewRemark, AssetVersion, HandoverLog, Chapter, ClientCommunication
 } from '../types/database';
 
 // Pre-populated Profiles tailored for IXR, EdTech & Creative Production
@@ -26,6 +26,17 @@ export const MOCK_PROFILES: Profile[] = [
     presence: 'online',
     created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'client-rep-1',
+    full_name: 'Dr. Alistair Vance',
+    email: 'alistair.vance@curriculumcorp.org',
+    role: 'client',
+    status: 'active',
+    designation: 'Client Project Director (Curriculum & Approvals)',
+    presence: 'online',
+    created_at: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(),
   },
   {
     id: 'video-ed-1',
@@ -143,8 +154,415 @@ export const MOCK_CLASSES: ProjectClass[] = [
   }
 ];
 
+// Structured Chapters for IXR Courses
+export const MOCK_CHAPTERS: Chapter[] = [
+  {
+    id: 'chap-10-01',
+    project_id: 'class-1',
+    chapter_number: 1,
+    title: 'Optics: Light Reflection & Refraction',
+    description: 'Ray diagrams, Snell\'s law, convex/concave lens simulations, and refractive index interactive lab.',
+    status: 'in_progress',
+    target_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'chap-10-02',
+    project_id: 'class-1',
+    chapter_number: 2,
+    title: 'Electricity: Ohm\'s Law & Circuits',
+    description: 'Electric potential, resistance in series/parallel, dynamic voltmeter-ammeter interactive circuits.',
+    status: 'planned',
+    target_date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  }
+];
+
+// Direct & Confidential Client Communications (Strictly isolated to Client, Head, and CEO)
+export const MOCK_CLIENT_COMMUNICATIONS: ClientCommunication[] = [
+  {
+    id: 'comm-1',
+    project_id: 'class-1',
+    chapter_id: 'chap-10-01',
+    work_item_id: 'c1-vid-l2',
+    sender_id: 'client-rep-1',
+    sender_role: 'client',
+    recipient_roles: ['head'],
+    type: 'reassignment_request',
+    title: 'Client Directive: Swap Editor on Chapter 1 Video L2',
+    message: 'The motion graphics in cut v2 are still too slow-paced for our 10th-grade curriculum pace. Please assign this track to a senior motion specialist like Alex Rivera immediately, but keep this private so the previous artist isn\'t discouraged.',
+    target_assignee_id: 'video-ed-1',
+    suggested_assignee_id: 'video-ed-1',
+    target_track: 'video_l2',
+    status: 'pending',
+    is_confidential: true,
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'comm-2',
+    project_id: 'class-1',
+    chapter_id: 'chap-10-01',
+    work_item_id: 'c1-hb',
+    sender_id: 'client-rep-1',
+    sender_role: 'client',
+    recipient_roles: ['head'],
+    type: 'private_directive',
+    title: 'School Board Inspection: Fast-Track Chapter 1 Delivery',
+    message: 'The ministry inspection committee is reviewing Chapter 1 next Thursday. If Video L3 and Quiz Testing are cleared by Tuesday 6 PM, our bonus milestone will be unlocked.',
+    status: 'pending',
+    is_confidential: true,
+    created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+  }
+];
+
 // Realistic IXR Work Items across Video, Audio, Quiz, and Handbook
 export const MOCK_WORK_ITEMS: WorkItem[] = [
+  // Chapter 1 Track: Script
+  {
+    id: 'c1-script',
+    project_id: 'class-1',
+    chapter_id: 'chap-10-01',
+    chapter_track: 'script',
+    title: 'Optics: Master Script & Pedagogical Blueprint',
+    asset_type: 'script',
+    status: 'approved',
+    priority: 'high',
+    current_review_stage: 'Approved',
+    is_parallel_review_allowed: false,
+    assignee_ids: ['quiz-gen-1'],
+    reviewer_ids: ['hb-rev-1'],
+    deadline: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+    instruction_text: 'Complete narrative script for reflection, refraction, refractive index, and prism dispersion with timestamped visual cues.',
+    instruction_version: 3,
+    latest_version_number: 2,
+    created_by: 'head-1',
+    created_at: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+
+  // Chapter 1 Track: Video L1
+  {
+    id: 'c1-vid-l1',
+    project_id: 'class-1',
+    chapter_id: 'chap-10-01',
+    chapter_track: 'video_l1',
+    title: 'Optics: 3D Animatic & Tech Rough Cut (L1)',
+    asset_type: 'video',
+    status: 'approved',
+    priority: 'high',
+    current_review_stage: 'Approved',
+    is_parallel_review_allowed: true,
+    assignee_ids: ['video-ed-1'],
+    reviewer_ids: ['vid-rev-1'],
+    deadline: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    instruction_text: '3D block-out for laser path through rectangular glass slab and triangular prism. Check 60fps frame rate and camera angles.',
+    instruction_version: 2,
+    latest_version_number: 2,
+    created_by: 'head-1',
+    created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+
+  // Chapter 1 Track: Video L2
+  {
+    id: 'c1-vid-l2',
+    project_id: 'class-1',
+    chapter_id: 'chap-10-01',
+    chapter_track: 'video_l2',
+    title: 'Optics: Ray Tracer & Prism Refraction (L2)',
+    asset_type: 'video',
+    status: 'review_in_progress',
+    priority: 'high',
+    current_review_stage: 'L2',
+    is_parallel_review_allowed: true,
+    assignee_ids: ['video-ed-1'],
+    reviewer_ids: ['vid-rev-1', 'hb-rev-1'],
+    deadline: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+    instruction_text: 'Animate laser beam traveling through glass prism. Emphasize normal angle theta-1 and theta-2. Ensure refractive index formula n1*sin(th1) = n2*sin(th2) is clearly highlighted.',
+    instruction_version: 2,
+    drive_folder_url: 'https://drive.google.com/drive/folders/ixr-optics-demo',
+    latest_version_number: 2,
+    created_by: 'head-1',
+    created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    versions: [
+      {
+        id: 'ver-1-1',
+        work_item_id: 'c1-vid-l2',
+        version_number: 1,
+        preview_url: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&auto=format&fit=crop&q=60',
+        notes: 'Initial draft render at 1080p 60fps with basic lighting.',
+        uploaded_by: 'video-ed-1',
+        created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'ver-1-2',
+        work_item_id: 'c1-vid-l2',
+        version_number: 2,
+        preview_url: 'https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=800&auto=format&fit=crop&q=60',
+        notes: 'Fixed laser beam glow intensity and synced audio cues at 01:24.',
+        uploaded_by: 'video-ed-1',
+        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      }
+    ],
+    remarks: [
+      {
+        id: 'rem-1',
+        work_item_id: 'c1-vid-l2',
+        version_number: 1,
+        review_stage: 'L1',
+        timestamp_seconds: 45,
+        target_ref: 'Prism entry point',
+        remark_text: 'Laser light beam flickers when intersecting the outer boundary. Fix the normal angle reflection.',
+        severity: 'correction',
+        status: 'resolved',
+        author_id: 'vid-rev-1',
+        is_confidential: false,
+        resolved_in_version: 2,
+        resolved_by: 'video-ed-1',
+        created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'rem-2',
+        work_item_id: 'c1-vid-l2',
+        version_number: 2,
+        review_stage: 'L2',
+        timestamp_seconds: 84,
+        target_ref: 'Snell formula card',
+        remark_text: 'HB Review: The subscript for glass refractive index should say n_glass instead of n2 to avoid confusion for 10th graders.',
+        severity: 'blocker',
+        status: 'open',
+        author_id: 'hb-rev-1',
+        is_confidential: false,
+        created_at: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'rem-priv-1',
+        work_item_id: 'c1-vid-l2',
+        version_number: 2,
+        review_stage: 'L2',
+        timestamp_seconds: 90,
+        target_ref: 'Motion Pacing',
+        remark_text: 'Client Direct: Pacing is sluggish here. If not solved by tomorrow noon, we should reassign per our direct comm note.',
+        severity: 'correction',
+        status: 'open',
+        author_id: 'client-rep-1',
+        is_confidential: true,
+        created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+      }
+    ]
+  },
+
+  // Chapter 1 Track: Video L3
+  {
+    id: 'c1-vid-l3',
+    project_id: 'class-1',
+    chapter_id: 'chap-10-01',
+    chapter_track: 'video_l3',
+    title: 'Optics: Lens Aberration & Visual Polish (L3)',
+    asset_type: 'video',
+    status: 'in_production',
+    priority: 'medium',
+    current_review_stage: 'L3',
+    is_parallel_review_allowed: true,
+    assignee_ids: ['video-ed-1'],
+    reviewer_ids: ['vid-rev-1'],
+    deadline: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
+    instruction_text: 'Chromatic aberration shaders and fine camera dolly movement.',
+    instruction_version: 1,
+    latest_version_number: 1,
+    created_by: 'head-1',
+    created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+
+  // Chapter 1 Track: Video L4
+  {
+    id: 'c1-vid-l4',
+    project_id: 'class-1',
+    chapter_id: 'chap-10-01',
+    chapter_track: 'video_l4',
+    title: 'Optics: Final 4K Color Grading & Master Export (L4)',
+    asset_type: 'video',
+    status: 'backlog',
+    priority: 'medium',
+    current_review_stage: 'L4',
+    is_parallel_review_allowed: false,
+    assignee_ids: ['video-ed-1'],
+    reviewer_ids: ['head-1'],
+    deadline: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(),
+    instruction_text: 'Master color export and delivery packaging for LMS integration.',
+    instruction_version: 1,
+    latest_version_number: 1,
+    created_by: 'head-1',
+    created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+
+  // Chapter 1 Track: Audio L1
+  {
+    id: 'c1-aud-l1',
+    project_id: 'class-1',
+    chapter_id: 'chap-10-01',
+    chapter_track: 'audio_l1',
+    title: 'Optics: Master Voiceover Recording & Dialogue EQ (Audio L1)',
+    asset_type: 'audio',
+    status: 'approved',
+    priority: 'high',
+    current_review_stage: 'Approved',
+    is_parallel_review_allowed: true,
+    assignee_ids: ['audio-gen-1'],
+    reviewer_ids: ['hb-rev-1'],
+    deadline: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    instruction_text: 'Crystal-clear teacher voiceover matching optics script lines 1 to 48.',
+    instruction_version: 1,
+    latest_version_number: 2,
+    created_by: 'head-1',
+    created_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+
+  // Chapter 1 Track: Audio L2
+  {
+    id: 'c1-aud-l2',
+    project_id: 'class-1',
+    chapter_id: 'chap-10-01',
+    chapter_track: 'audio_l2',
+    title: 'Optics: SFX Laser Chimes & Ambient Mix (Audio L2)',
+    asset_type: 'audio',
+    status: 'review_in_progress',
+    priority: 'medium',
+    current_review_stage: 'L2',
+    is_parallel_review_allowed: true,
+    assignee_ids: ['audio-gen-1'],
+    reviewer_ids: ['vid-rev-1'],
+    deadline: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+    instruction_text: 'Laser power-up hum, prism transition swooshes, and subtle background study ambience.',
+    instruction_version: 1,
+    latest_version_number: 1,
+    created_by: 'head-1',
+    created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+
+  // Chapter 1 Track: Quiz Generation
+  {
+    id: 'c1-quiz-gen',
+    project_id: 'class-1',
+    chapter_id: 'chap-10-01',
+    chapter_track: 'quiz_generation',
+    title: 'Optics: 20-Item Question Bank Authoring (Quiz Generation)',
+    asset_type: 'quiz',
+    status: 'approved',
+    priority: 'high',
+    current_review_stage: 'Approved',
+    is_parallel_review_allowed: true,
+    assignee_ids: ['quiz-gen-1'],
+    reviewer_ids: ['hb-rev-1'],
+    deadline: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    instruction_text: 'Author 20 conceptual questions with 4 plausible distractors and step-by-step solutions.',
+    instruction_version: 2,
+    latest_version_number: 2,
+    created_by: 'head-1',
+    created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+
+  // Chapter 1 Track: Quiz Review
+  {
+    id: 'c1-quiz-rev',
+    project_id: 'class-1',
+    chapter_id: 'chap-10-01',
+    chapter_track: 'quiz_review',
+    title: 'Optics: Pedagogical Accuracy & Curriculum Audit (Quiz Review)',
+    asset_type: 'quiz',
+    status: 'approved',
+    priority: 'high',
+    current_review_stage: 'Approved',
+    is_parallel_review_allowed: true,
+    assignee_ids: ['hb-rev-1'],
+    reviewer_ids: ['hb-rev-1'],
+    deadline: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    instruction_text: 'Cross-verify formula symbols against National Science Standards handbook.',
+    instruction_version: 1,
+    latest_version_number: 1,
+    created_by: 'head-1',
+    created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+
+  // Chapter 1 Track: Quiz Implementation
+  {
+    id: 'c1-quiz-imp',
+    project_id: 'class-1',
+    chapter_id: 'chap-10-01',
+    chapter_track: 'quiz_implementation',
+    title: 'Optics: Interactive Ray Slider & H5P Engine (Quiz Implementation)',
+    asset_type: 'quiz',
+    status: 'review_in_progress',
+    priority: 'high',
+    current_review_stage: 'Implementation',
+    is_parallel_review_allowed: true,
+    assignee_ids: ['quiz-imp-1'],
+    reviewer_ids: ['hb-rev-1'],
+    deadline: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
+    instruction_text: 'Embed interactive canvas angle slider where student changes incident angle and watches refracted ray bend.',
+    instruction_version: 2,
+    latest_version_number: 2,
+    created_by: 'head-1',
+    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+
+  // Chapter 1 Track: Quiz Testing
+  {
+    id: 'c1-quiz-test',
+    project_id: 'class-1',
+    chapter_id: 'chap-10-01',
+    chapter_track: 'quiz_testing',
+    title: 'Optics: Cross-Device Telemetry & Scoring QA (Quiz Testing)',
+    asset_type: 'quiz',
+    status: 'in_production',
+    priority: 'medium',
+    current_review_stage: 'Testing',
+    is_parallel_review_allowed: true,
+    assignee_ids: ['quiz-imp-1'],
+    reviewer_ids: ['head-1'],
+    deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    instruction_text: 'Test on iOS Safari, Chrome Android, and Windows Edge. Verify score payloads transmit to backend.',
+    instruction_version: 1,
+    latest_version_number: 1,
+    created_by: 'head-1',
+    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+
+  // Chapter 1 Track: HB Review
+  {
+    id: 'c1-hb',
+    project_id: 'class-1',
+    chapter_id: 'chap-10-01',
+    chapter_track: 'hb_review',
+    title: 'Optics: Principal Director Final Handbook Clearance (HB Review)',
+    asset_type: 'handbook',
+    status: 'review_in_progress',
+    priority: 'high',
+    current_review_stage: 'HB Approval',
+    is_parallel_review_allowed: false,
+    assignee_ids: ['hb-rev-1'],
+    reviewer_ids: ['ceo-1', 'head-1'],
+    deadline: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
+    instruction_text: 'Final executive validation of whole Chapter 1 package before packaging to client LMS.',
+    instruction_version: 1,
+    latest_version_number: 1,
+    created_by: 'ceo-1',
+    created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
   {
     id: 'item-1',
     project_id: 'class-1',
@@ -821,6 +1239,24 @@ class MemoryDB {
     }
   })();
 
+  chapters: Chapter[] = (() => {
+    try {
+      const stored = localStorage.getItem('wc2_chapters');
+      return stored ? JSON.parse(stored) : [...MOCK_CHAPTERS];
+    } catch {
+      return [...MOCK_CHAPTERS];
+    }
+  })();
+
+  clientCommunications: ClientCommunication[] = (() => {
+    try {
+      const stored = localStorage.getItem('wc2_client_comms');
+      return stored ? JSON.parse(stored) : [...MOCK_CLIENT_COMMUNICATIONS];
+    } catch {
+      return [...MOCK_CLIENT_COMMUNICATIONS];
+    }
+  })();
+
   workItems: WorkItem[] = (() => {
     try {
       const stored = localStorage.getItem('wc2_work_items');
@@ -834,6 +1270,8 @@ class MemoryDB {
     try {
       if (table === 'profiles') localStorage.setItem('wc2_profiles', JSON.stringify(this.profiles));
       if (table === 'project_classes') localStorage.setItem('wc2_project_classes', JSON.stringify(this.projectClasses));
+      if (table === 'chapters') localStorage.setItem('wc2_chapters', JSON.stringify(this.chapters));
+      if (table === 'client_communications') localStorage.setItem('wc2_client_comms', JSON.stringify(this.clientCommunications));
       if (table === 'work_items') localStorage.setItem('wc2_work_items', JSON.stringify(this.workItems));
       if (table === 'leads') localStorage.setItem('wc2_leads', JSON.stringify(this.leads));
       if (table === 'lead_updates') localStorage.setItem('wc2_lead_updates', JSON.stringify(this.leadUpdates));
@@ -1880,6 +2318,129 @@ class MemoryDB {
     );
 
     return handover;
+  }
+
+  // Chapter Management
+  getChapters(projectId?: string): Chapter[] {
+    if (projectId && projectId !== 'all') {
+      return this.chapters.filter(c => c.project_id === projectId);
+    }
+    return [...this.chapters];
+  }
+
+  createChapter(chapterData: Omit<Chapter, 'id' | 'created_at' | 'updated_at'>): Chapter {
+    const newChap: Chapter = {
+      ...chapterData,
+      id: `chap-${Math.random().toString(36).substr(2, 9)}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    this.chapters.push(newChap);
+    this.persist('chapters');
+    this.notify('chapters', 'insert', newChap);
+    return newChap;
+  }
+
+  // Client Direct & Confidential Communications
+  getClientCommunications(projectId?: string): ClientCommunication[] {
+    if (projectId && projectId !== 'all') {
+      return this.clientCommunications.filter(c => c.project_id === projectId);
+    }
+    return [...this.clientCommunications];
+  }
+
+  createClientCommunication(data: Omit<ClientCommunication, 'id' | 'created_at' | 'updated_at' | 'status'>): ClientCommunication {
+    const newComm: ClientCommunication = {
+      ...data,
+      id: `comm-${Math.random().toString(36).substr(2, 9)}`,
+      status: 'pending',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    this.clientCommunications.unshift(newComm);
+    this.persist('client_communications');
+    this.notify('client_communications', 'insert', newComm);
+
+    // Notify Head of IXR and CEO
+    this.profiles
+      .filter(p => p.role === 'head' || p.designation?.toLowerCase().includes('ceo'))
+      .forEach(lead => {
+        this.createNotification(
+          lead.id,
+          'task_update',
+          `🔒 Client Direct Note: ${data.title}`,
+          data.message.slice(0, 80) + '...',
+          '/client-hub'
+        );
+      });
+
+    return newComm;
+  }
+
+  actionClientCommunication(commId: string, actionNotes: string): ClientCommunication {
+    const idx = this.clientCommunications.findIndex(c => c.id === commId);
+    if (idx === -1) throw new Error('Communication not found');
+
+    this.clientCommunications[idx].status = 'actioned';
+    this.clientCommunications[idx].action_notes = actionNotes;
+    this.clientCommunications[idx].updated_at = new Date().toISOString();
+    this.persist('client_communications');
+    this.notify('client_communications', 'update', this.clientCommunications[idx]);
+    return this.clientCommunications[idx];
+  }
+
+  // Discreet Reassignment (Client directive executed smoothly by Head of IXR)
+  discreetReassign(
+    itemId: string,
+    newAssigneeId: string,
+    sanitizedBriefing: string,
+    commId?: string
+  ): { workItem: WorkItem; handover: HandoverLog } {
+    const idx = this.workItems.findIndex(i => i.id === itemId);
+    if (idx === -1) throw new Error('Work item not found');
+
+    const item = this.workItems[idx];
+    const prevAssigneeId = item.assignee_ids[0] || 'unknown';
+
+    // Log to turnover ledger with sanitized briefing
+    const handover: HandoverLog = {
+      id: `ho-${Math.random().toString(36).substr(2, 9)}`,
+      work_item_id: itemId,
+      from_user_id: prevAssigneeId,
+      to_user_id: newAssigneeId,
+      reason: 'Capacity balancing & executive directive',
+      briefing_notes: sanitizedBriefing,
+      current_version: item.latest_version_number,
+      pending_remarks_count: (item.remarks || []).filter(r => r.status === 'open').length,
+      created_at: new Date().toISOString()
+    };
+
+    item.handovers = [handover, ...(item.handovers || [])];
+    item.assignee_ids = [newAssigneeId];
+    item.updated_at = new Date().toISOString();
+
+    this.persist('work_items');
+    this.notify('work_items', 'update', item);
+
+    // If linked to a client communication, mark it actioned
+    if (commId) {
+      const newAssigneeProfile = this.profiles.find(p => p.id === newAssigneeId);
+      this.actionClientCommunication(
+        commId,
+        `Discreetly reassigned to ${newAssigneeProfile?.full_name || newAssigneeId}. Briefing provided: "${sanitizedBriefing}"`
+      );
+    }
+
+    // Notify incoming teammate with clean message
+    this.createNotification(
+      newAssigneeId,
+      'assignment_alert',
+      '🤝 Direct Assignment: You received an asset',
+      `Briefing: ${sanitizedBriefing.slice(0, 80)}...`,
+      `/items/${itemId}`
+    );
+
+    return { workItem: item, handover };
   }
 }
 

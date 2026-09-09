@@ -18,7 +18,7 @@ interface TestSubject {
   email: string;
   role: UserRole;
   designation: string;
-  department: 'Leadership' | 'Reviewers' | 'Creators';
+  department: 'Leadership' | 'Client' | 'Reviewers' | 'Creators';
   presence: 'online' | 'idle' | 'busy';
   color: string;
   icon: any;
@@ -26,6 +26,23 @@ interface TestSubject {
 }
 
 const TEST_SUBJECTS: TestSubject[] = [
+  {
+    id: 'client-rep-1',
+    name: 'Dr. Alistair Vance',
+    email: 'alistair.vance@curriculumcorp.org',
+    role: 'client',
+    designation: 'Client Project Director (Approvals & Directives)',
+    department: 'Client',
+    presence: 'online',
+    color: 'from-emerald-600/20 to-teal-600/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/40',
+    icon: Shield,
+    powers: [
+      '🔒 Confidential Direct Channel: Send private directives directly to Head of IXR & CEO',
+      '👥 Reassignment Directives: Request team member swaps with 1-click discreet leadership action',
+      '🎯 Curriculum Milestone Clearance: Final client approval gate before LMS deployment',
+      '💬 Private Remarks: Post confidential feedback hidden from general editors and testers'
+    ]
+  },
   {
     id: 'head-1',
     name: 'Sarah Jenkins',
@@ -37,10 +54,10 @@ const TEST_SUBJECTS: TestSubject[] = [
     color: 'from-purple-500/20 to-indigo-500/20 text-purple-400 border-purple-500/30',
     icon: Layers,
     powers: [
-      '🎬 Oversee All Classes (Class 10th Maths, Class 12th Physics)',
+      '🎬 Oversee All Classes & Chapters (Optics, Electricity, Chemistry)',
+      '🔒 Confidential Client Hub: Review direct client requests & perform discreet reassignments',
       '⚡ Toggle Parallel Review Mode (Permit L4 review before L1 completion)',
-      '📝 Approve L1–L4 review tiers & deliver assets',
-      '🤝 Audit Team Turnover Ledger & Handover logs'
+      '📝 Approve L1–L4 review tiers & deliver assets'
     ]
   },
   {
@@ -55,9 +72,9 @@ const TEST_SUBJECTS: TestSubject[] = [
     icon: Shield,
     powers: [
       '👑 Executive Organization Oversight & Master Controls',
+      '🔒 Direct Client Escalation Oversight & Commercial SLA controls',
       '🔓 Final Signoff (Approved Final) & Gate Override',
-      '📊 Cross-Class Velocity & Pipeline Health Analytics',
-      '👥 Department Structure & Role Management'
+      '📊 Cross-Class Velocity & Pipeline Health Analytics'
     ]
   },
   {
@@ -166,7 +183,7 @@ const TEST_SUBJECTS: TestSubject[] = [
 
 export const AuthPage: React.FC<AuthPageProps> = ({ onBypass }) => {
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('head-1');
-  const [activeFilter, setActiveFilter] = useState<'All' | 'Leadership' | 'Reviewers' | 'Creators'>('All');
+  const [activeFilter, setActiveFilter] = useState<'All' | 'Leadership' | 'Client' | 'Reviewers' | 'Creators'>('All');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Custom persona creation state
@@ -206,17 +223,18 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBypass }) => {
       const created = await dbClient.createProfile(newProfile);
       onBypass(created.id);
     } catch (err) {
-      console.error('Failed to create custom test profile:', err);
+      console.error(err);
       setIsLoggingIn(false);
     }
   };
 
-  const filteredSubjects = activeFilter === 'All'
-    ? TEST_SUBJECTS
-    : TEST_SUBJECTS.filter(s => s.department === activeFilter);
+  const filteredSubjects = TEST_SUBJECTS.filter(s => {
+    if (activeFilter === 'All') return true;
+    return s.department === activeFilter;
+  });
 
   return (
-    <div className="min-h-screen w-full bg-background text-foreground flex flex-col items-center justify-between p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen w-full bg-background text-foreground flex flex-col items-center justify-between p-4 sm:p-6 md:p-8 selection:bg-primary/20">
       {/* Background Decorative Gradients */}
       <div className="fixed inset-0 pointer-events-none opacity-25 overflow-hidden">
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
@@ -270,7 +288,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onBypass }) => {
             <SlidersHorizontal className="h-3 w-3" />
             <span>Role Filter:</span>
           </span>
-          {(['All', 'Leadership', 'Reviewers', 'Creators'] as const).map((filter) => (
+          {(['All', 'Client', 'Leadership', 'Reviewers', 'Creators'] as const).map((filter) => (
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}

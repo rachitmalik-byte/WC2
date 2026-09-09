@@ -6,7 +6,8 @@ export type UserRole =
   | 'quiz_implementer' 
   | 'hb_reviewer' 
   | 'video_reviewer' 
-  | 'growth_specialist';
+  | 'growth_specialist'
+  | 'client';
 
 export type ProfileStatus = 'active' | 'inactive';
 export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'proposal' | 'negotiation' | 'closed_won' | 'closed_lost';
@@ -16,10 +17,65 @@ export type TaskStatus = 'todo' | 'in_progress' | 'done';
 export type TaskType = 'personal' | 'assigned' | 'team';
 
 // IXR Creative & Content Operating System Types
-export type AssetType = 'video' | 'audio' | 'quiz' | 'handbook' | 'interactive_module';
+export type AssetType = 'video' | 'audio' | 'quiz' | 'handbook' | 'interactive_module' | 'script';
 export type WorkItemStatus = 'backlog' | 'in_production' | 'review_in_progress' | 'approved' | 'delivered';
 export type ReviewSeverity = 'blocker' | 'correction' | 'suggestion' | 'nitpick';
 export type RemarkStatus = 'open' | 'resolved' | 'rejected' | 'in_discussion';
+
+// Strict Chapter Breakdown Sub-Tracks
+export type ChapterTrack = 
+  | 'script'
+  | 'video_l1' 
+  | 'video_l2' 
+  | 'video_l3' 
+  | 'video_l4'
+  | 'audio_l1' 
+  | 'audio_l2'
+  | 'quiz_generation' 
+  | 'quiz_review' 
+  | 'quiz_implementation' 
+  | 'quiz_testing'
+  | 'hb_review';
+
+export interface Chapter {
+  id: string;
+  project_id: string;
+  chapter_number: number;
+  title: string;
+  description?: string;
+  status: 'planned' | 'in_progress' | 'review' | 'completed';
+  target_date?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ClientCommunicationType = 
+  | 'reassignment_request' 
+  | 'private_directive' 
+  | 'scope_alert' 
+  | 'budget_sla' 
+  | 'candid_critique';
+
+export interface ClientCommunication {
+  id: string;
+  project_id: string;
+  chapter_id?: string;
+  work_item_id?: string;
+  sender_id: string;
+  sender_role: 'client' | 'head' | 'executive';
+  recipient_roles: UserRole[];
+  type: ClientCommunicationType;
+  title: string;
+  message: string;
+  suggested_assignee_id?: string;
+  target_assignee_id?: string; // e.g. specialist client wants replaced
+  target_track?: ChapterTrack;
+  status: 'pending' | 'actioned' | 'dismissed';
+  is_confidential: boolean; // strictly hidden from production team
+  action_notes?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface ProjectClass {
   id: string;
@@ -31,6 +87,7 @@ export interface ProjectClass {
   status: 'active' | 'archived' | 'completed';
   custom_review_stages: string[]; // e.g. ["L1: Tech Check", "L2: HB Accuracy", "L3: Quiz Sync", "L4: Final Signoff"]
   lead_id?: string;
+  chapters?: Chapter[];
   created_at: string;
   updated_at: string;
 }
@@ -46,6 +103,7 @@ export interface ReviewRemark {
   severity: ReviewSeverity;
   status: RemarkStatus;
   author_id: string;
+  is_confidential?: boolean; // If true: visible only to Client, Head, CEO. Hidden from editors/testers.
   resolved_in_version?: number;
   resolved_by?: string;
   created_at: string;
@@ -87,6 +145,8 @@ export interface InstructionHistory {
 export interface WorkItem {
   id: string;
   project_id: string;
+  chapter_id?: string;
+  chapter_track?: ChapterTrack;
   title: string;
   asset_type: AssetType;
   status: WorkItemStatus;

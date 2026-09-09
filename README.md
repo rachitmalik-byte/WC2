@@ -97,24 +97,63 @@ When team members are asked whether this workflow is efficient, the answer is an
 | **"No Granular Access Control"**: Everyone with edit link has god-mode power, leading to accidental deletions and unauthorized status changes. | **RBAC Engine**: Editors, Reviewers, Audio Specialists, and Executives only see and interact with their authorized actions. |
 | **"File Version Nightmare"**: Rows named `video_final_v2_edit_final_FINAL.mp4` clutter cells without link verification. | **Structured Version Tree**: Clear $v1$, $v2$, $v3$ tracking with live preview embed and direct review remark comparisons. |
 
+### 3. Chapter Production Hierarchy Matrix (12-Track Pipeline)
+Specialized interactive media modules (Physics, Chemistry, Biology, Mathematics) follow a rigorous **12-track production tree**:
+```
+Chapter
+│
+├── Script
+│
+├── Video
+│   ├── L1 (Story & Rough Cut)
+│   ├── L2 (2D/3D Animation Polish)
+│   ├── L3 (Audio & SFX Sync)
+│   └── L4 (Color & Master Export)
+│
+├── Audio
+│   ├── L1 (Voiceover & Rough Foley)
+│   └── L2 (Mixing, Master EQ & Spatialization)
+│
+├── Quiz
+│   ├── Generation (Pedagogical Question Crafting)
+│   ├── Review (Subject Matter Expert Sign-off)
+│   ├── Implementation (Interactive Widget Code / Canvas)
+│   └── Testing (QA, Edge-Case & Response Logic)
+│
+└── HB Review (Final Executive Head Boss Gatekeeper)
+```
+- **Matrix Cockpit**: Visualize all 12 tracks side-by-side per Chapter with real-time stage badges, assignees, and progress telemetry.
+- **Direct Asset Inspection**: Click any track node in the tree to immediately open its review drawer and timestamped feedback.
+
+### 4. Confidential Client Direct Channel & Discreet Reassignments
+Real-world agency and client relationships require private communication channels to protect junior team morale and prevent panic:
+- **Direct Client ↔ Leadership Hotwire**: Clients (`Dr. Alistair Vance`) can submit private directives, critical feedback, or reassignment requests directly to the Head of IXR and Executive Team without team-wide exposure.
+- **Discreet Reassignment Engine**: Leadership can reassign deliverables in response to client directives with a sanitized briefing note, shielding junior editors from harsh client critiques while ensuring accountability.
+- **Confidential Remark Scoping**: Review notes can be toggled between `🔒 Client/Leads Only` and `👥 Team Public`, with leadership having one-click authority to sanitize and publish remarks to the broader production queue.
+
+### 5. Role Handoff & Turnover Ledger
+- **Seamless Reassignments**: When an editor or reviewer leaves the project, reassigning their queue takes 2 clicks and automatically updates the immutable turnover history.
+- **Zero-Loss Handover Notes**: The incoming specialist inherits full context, past remarks, and revision history directly on the asset drawer.
+
 ---
 
 ## 🎭 Role Simulator & Persona Test Flight
 
-To enable instant stakeholder testing, demoing, and workflow verification **without forcing team members through tedious signup forms or email verification**, WC 2.0 includes a **Universal Persona Simulator**:
+To enable instant stakeholder testing, demoing, and workflow verification **without forcing team members through tedious signup forms or email verification**, WC 2.0 includes an **8-Persona Role Simulator**:
 
 ```
 [ 🌿 WC 2.0 Login / Switcher ]
+ ├─ 🏛️ Client Project Director   (Dr. Alistair Vance - Private directives, client feedback, reassignment requests)
  ├─ 👑 CEO / Executive            (Full visibility, executive dashboards, override authority)
- ├─ 🎯 Head of IXR Operations     (Pipeline orchestration, assignment management, bottleneck auditing)
- ├─ 📝 HB Reviewer (Head Boss)    (Final artistic approval gatekeeper, high-priority sign-offs)
- ├─ 🎬 Video Reviewer (L1/L2)     (Precision timecode review, revision request issuer)
- ├─ ✂️ Video Editor (Specialist)  (Asset uploader, status updater, remark resolver)
- ├─ 🎵 Audio Specialist           (Sound design, SFX/VO checkpoints, L3 polish)
- └─ 🧪 Quiz / QA Specialist       (Interactive element validation, final QA gatekeeper)
+ ├─ 🎯 Head of IXR Operations     (Elena Rostova - Pipeline orchestration, discreet reassignment, bottleneck auditing)
+ ├─ 📝 HB Reviewer (Head Boss)    (Marcus Vance - Final artistic approval gatekeeper, high-priority sign-offs)
+ ├─ 🎬 Video Reviewer (L1/L2)     (Devon Brooks - Precision timecode review, revision request issuer)
+ ├─ ✂️ Video Editor (Specialist)  (Alex Rivera - Asset uploader, status updater, remark resolver)
+ ├─ 🎵 Audio Specialist           (Priya Sharma - Sound design, SFX/VO checkpoints, L3 polish)
+ └─ 🧪 Quiz / QA Specialist       (Taro Tanaka - Interactive element validation, final QA gatekeeper)
 ```
 
-Clicking **"Test Flight Login"** or using the **Role Switcher** in the top navigation bar immediately switches permissions, view filters, and assigned deliverables in real-time.
+Clicking **"Test Flight Login"** or using the **Role Switcher** in the top navigation bar immediately switches permissions, view filters, and assigned deliverables in real-time. Notice how logging in as **Alex Rivera (Video Editor)** hides the Client Direct Channel, whereas logging in as **Elena Rostova (Head of IXR)** or **Dr. Alistair Vance (Client)** unlocks private directives and discreet reassignment controls.
 
 ---
 
@@ -180,6 +219,28 @@ npm run dev
 ---
 
 ## 📝 Patch Notes & Changelog
+
+### Version 2.1.0 — *Chapter Hierarchy & Confidential Client Direct Hub*
+*Release Date: September 2026*
+
+#### 🌟 New Features & Architectural Upgrades
+- **Chapter Production Hierarchy Matrix**: Added interactive 12-track chapter view modeled directly after production workflows:
+  - **Script**: Narrative, scene breakdown, and storyboard sign-off.
+  - **Video Pipeline (L1, L2, L3, L4)**: Rough cut, 2D/3D animation polish, audio/SFX integration, and color/master grading.
+  - **Audio Pipeline (L1, L2)**: Voiceover/foley recording and final mix/spatialization.
+  - **Quiz Pipeline**: Generation (pedagogical design), Review (SME sign-off), Implementation (interactive code), and Testing (QA validation).
+  - **HB Review**: Final Head Boss gatekeeper sign-off.
+- **Confidential Client Direct Channel**: Added direct, isolated communications link between the Client (`Dr. Alistair Vance`) and leadership (`Head of IXR`, `CEO`):
+  - Team specialists (animators, editors, audio designers) have zero visibility into sensitive client critiques.
+  - Privileged leadership can view client directives, severity badges, and requested personnel reassignments.
+- **Discreet Reassignment Engine**:
+  - Leadership can action client reassignment requests directly from the Direct Hub modal.
+  - Generates a sanitized internal briefing note to shield specialists from harsh feedback while recording the transition in the turnover audit ledger.
+- **Confidential Review Remarks**:
+  - Review drawer now supports `🔒 Client/Leads Only` vs `👥 Team Public` remark scoping.
+  - Leadership can review sensitive client notes and promote sanitized versions with `[Make Team Public]`.
+- **Expanded Role Simulator**: Added Dr. Alistair Vance (Client Project Director) with specialized private directive and confidential review capabilities.
+- **SQL Schema v2.1**: Added `chapters`, `client_communications`, and track-scoped work items with granular Row-Level Security policies.
 
 ### Version 2.0.0 — *The IXR Creative Operations Release*
 *Release Date: September 2026*
